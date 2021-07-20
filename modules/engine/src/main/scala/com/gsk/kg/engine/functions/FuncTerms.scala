@@ -108,7 +108,7 @@ object FuncTerms {
         when( // if the literal is a simple literal, return xsd:string
           isLiteral(col),
           "xsd:string"
-        ).otherwise( // not a literal. not defined by w3 spec. return lit("") or fail/exception/other?
+        ).otherwise( // input not a literal; not defined by w3 spec
           lit("")
         )
       )
