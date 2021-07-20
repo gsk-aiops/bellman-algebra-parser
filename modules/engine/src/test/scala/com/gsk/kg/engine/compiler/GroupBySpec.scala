@@ -538,6 +538,34 @@ class GroupBySpec
       result.right.get.collect should have length 3
     }
 
+    "operate correctly there's GROUP BY and a GROUP_CONCAT function" in {
+
+      val df = List(
+        (
+          "<http://uri.com/subject/a1>",
+          "<http://uri.com/predicate/1>",
+          "a"
+        ),
+        (
+          "<http://uri.com/subject/a1>",
+          "<http://uri.com/predicate/2>",
+          "b"
+        )
+      ).toDF("s", "p", "o")
+
+      val query =
+        """
+          SELECT (GROUP_CONCAT(?o;SEPARATOR="|") as ?gc)
+          WHERE {
+            ?a ?b ?o
+          } GROUP BY ?a
+          """
+
+      val result = Compiler.compile(df, query, config)
+
+      result.right.get.collect should have length 3
+    }
+
     "work correctly when the query doesn't contain an explicit GROUP BY clause" in {
 
       val df = List(
@@ -615,7 +643,7 @@ class GroupBySpec
 
       val query =
         """
-          SELECT COUNT(?o) AVG(?o)
+          SELECT COUNT(?o) AVG(?o) GROUP_CONCAT(?o;separator="|")
           WHERE {
             ?s ?p ?o
           }
@@ -627,7 +655,11 @@ class GroupBySpec
       }
 
       result.collect shouldEqual Array(
-        Row("5", "3.0")
+        Row(
+          "5",
+          "3.0",
+          "\"4\"^^xsd:int|\"2\"^^xsd:int|\"3\"^^xsd:int|\"4\"^^xsd:int|\"2\"^^xsd:int"
+        )
       )
     }
   }
