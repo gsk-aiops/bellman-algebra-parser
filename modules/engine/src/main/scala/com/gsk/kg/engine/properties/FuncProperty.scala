@@ -3,12 +3,14 @@ package com.gsk.kg.engine.properties
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
 
+import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.FuncForms
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 
@@ -117,6 +119,29 @@ object FuncProperty {
     Right(collapsedPathsDf).asRight[EngineError]
   }
 
+  def zeroOrMore(df: DataFrame, e: ColOrDf): Result[ColOrDf] = {
+
+    val filteredDf = e match {
+      case Right(predDf) => predDf
+      case Left(_)       => df
+    }
+
+    val zeroPathDf = getZeroPaths(df)
+
+    oneOrMore(filteredDf, e).flatMap {
+      case Right(oneOrMoreDf) =>
+        val zeroOrMoreDf =
+          oneOrMoreDf union zeroPathDf
+        zeroOrMoreDf.asRight[Column].asRight[EngineError]
+      case Left(_) =>
+        EngineError
+          .InvalidPropertyPathArguments(
+            "Error while processing zeroOrMore property path"
+          )
+          .asLeft[ColOrDf]
+    }
+  }
+
   def uri(s: String): ColOrDf =
     Left(lit(s))
 
@@ -179,6 +204,21 @@ object FuncProperty {
     } else {
       accDf
     }
+  }
+
+  /** It returns a dataframe with all the vertex that points to itselft (0 length path), the predicate column will
+    * contain null values.
+    * @param df
+    * @return
+    */
+  private def getZeroPaths(df: DataFrame): DataFrame = {
+    val sDf = df.select(df("s"))
+    val oDf = df.select(df("o"))
+
+    val vertex = sDf.union(oDf).distinct()
+    vertex
+      .withColumn("p", nullLiteral)
+      .withColumn("o", vertex("s"))
   }
 
   /** It merges two dataframes by adding rows from the right dataframe to the second and setting to null those columns

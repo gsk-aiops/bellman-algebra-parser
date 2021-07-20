@@ -190,6 +190,74 @@ class FuncPropertySpec
         )
       }
     }
+
+    "ZeroOrMore function" should {
+
+      "return expected values" in {
+
+        val df = List(
+          (
+            "<http://example.org/Alice>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Bob>"
+          ),
+          (
+            "<http://example.org/Bob>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Charles>"
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/name>",
+            "\"Charles\""
+          )
+        ).toDF("s", "p", "o")
+
+        // ?s foaf:knows* ?o
+        lazy val knowsUriFunc =
+          FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+        val result = FuncProperty.zeroOrMore(df, knowsUriFunc)
+
+        result.right.get.right.get.collect().toSet shouldEqual Set(
+          Row(
+            "<http://example.org/Alice>",
+            null,
+            "<http://example.org/Alice>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            null,
+            "<http://example.org/Bob>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            null,
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "\"Charles\"",
+            null,
+            "\"Charles\""
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Bob>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Charles>"
+          )
+        )
+      }
+    }
   }
 
 }
