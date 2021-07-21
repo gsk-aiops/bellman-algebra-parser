@@ -4,13 +4,8 @@ import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.StructField
-import org.apache.spark.sql.types.StructType
 
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.FuncForms
@@ -105,7 +100,8 @@ object FuncProperty {
       .withColumnRenamed("p", s"$pIdx")
       .withColumnRenamed("o", s"$oIdx")
 
-    val traversedDf = traverse(filteredDf, filteredDf, i, sIdx, pIdx, oIdx)
+    val traversedDf =
+      getMoreThanOnePaths(filteredDf, filteredDf, i, sIdx, pIdx, oIdx)
 
     val traversedCols = traversedDf.columns.toSeq.sorted
 
@@ -116,7 +112,7 @@ object FuncProperty {
         traversedCols.tail: _*
       )
 
-    val collapsedPathsDf = collapsePathsDf(expandedPathsDf)
+    val collapsedPathsDf = collapsePaths(expandedPathsDf)
 
     Right(collapsedPathsDf).asRight[EngineError]
   }
@@ -135,7 +131,7 @@ object FuncProperty {
     * @param oIdx Object index (for column renaming
     * @return Dataframe with all the triples connected creating paths
     */
-  private def traverse(
+  private def getMoreThanOnePaths(
       baseDf: DataFrame,
       accDf: DataFrame,
       i: Int,
@@ -213,17 +209,8 @@ object FuncProperty {
     * @param df
     * @return
     */
-  private def collapsePathsDf(df: DataFrame): DataFrame = {
-
-    implicit val spoEncoder: Encoder[Row] = RowEncoder(
-      StructType(
-        List(
-          StructField("s", StringType),
-          StructField("p", StringType),
-          StructField("o", StringType)
-        )
-      )
-    )
+  private def collapsePaths(df: DataFrame): DataFrame = {
+    import com.gsk.kg.engine.SPOEncoder._
 
     df.map { r =>
       val (vs, es) = (1 until r.length)
