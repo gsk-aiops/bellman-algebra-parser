@@ -119,12 +119,9 @@ trait DataFrameArbitraries {
         )
 
       Arbitrary(
-        Gen.frequency(
-          1 -> langTaggedString,
-          1 -> typeTaggedLiteral,
-          2 -> CommonGenerators.nonEmptyStringGenerator.map(str =>
-            Literal(str, None)
-          )
+        Gen.oneOf(
+          langTaggedString,
+          typeTaggedLiteral
         )
       )
     }
