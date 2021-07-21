@@ -228,18 +228,23 @@ class PropertyPathsSpec
         )
       }
 
-      "optional ? property path" ignore {
+      "optional ? property path" in {
 
         val df = List(
           (
-            "<http://example.org/alice>",
+            "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/bob>"
+            "<http://example.org/Bob>"
           ),
           (
-            "<http://example.org/bob>",
+            "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/charles>"
+            "<http://example.org/Charles>"
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/name>",
+            "\"Charles\""
           )
         ).toDF("s", "p", "o")
 
@@ -255,7 +260,14 @@ class PropertyPathsSpec
 
         val result = Compiler.compile(df, query, config)
 
-        result.right.get.collect.toSet shouldEqual Set()
+        result.right.get.collect.toSet shouldEqual Set(
+          Row("\"Charles\"", "\"Charles\""),
+          Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+          Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+          Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+          Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+          Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+        )
       }
 
       "negated ! property path" ignore {

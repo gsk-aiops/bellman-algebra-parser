@@ -142,6 +142,20 @@ object FuncProperty {
     }
   }
 
+  def zeroOrOne(df: DataFrame, e: ColOrDf): Result[ColOrDf] = {
+
+    val onePath = (e match {
+      case Right(predDf) => predDf
+      case Left(predCol) => df.filter(predCol <=> df("p"))
+    }).drop("g")
+
+    val zeroPath = getZeroPaths(df)
+
+    (onePath union zeroPath)
+      .asRight[Column]
+      .asRight[EngineError]
+  }
+
   def uri(s: String): ColOrDf =
     Left(lit(s))
 
