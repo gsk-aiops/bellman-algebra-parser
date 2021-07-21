@@ -201,4 +201,23 @@ class FuncAggSpec
     }
   }
 
+  "FuncAgg.groupConcat" should {
+
+    "operate correctly mixing types" in {
+
+      val df = List(
+        "1.0",
+        "\"2.2\"^^xsd:float",
+        "alice",
+        "\"bob\"^^xsd:string"
+      ).toDF("v")
+
+      val result = df.select(FuncAgg.groupConcat(df("v"), "|"))
+
+      result.collect().toSet shouldEqual Set(
+        Row("1.0|\"2.2\"^^xsd:float|alice|\"bob\"^^xsd:string")
+      )
+    }
+  }
+
 }

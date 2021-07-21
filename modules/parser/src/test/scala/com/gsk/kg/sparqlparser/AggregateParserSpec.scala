@@ -52,10 +52,10 @@ class AggregateParserSpec extends AnyFlatSpec {
   }
 
   "group_concat" should "be parsed correctly" in {
-    val s = "(groupConcat ?p1 \",\")"
+    val s = "(group_concat(separator '|') ?p1)"
     val p = fastparse.parse(s, AggregateParser.parser(_))
     p.get.value match {
-      case Aggregate.GROUP_CONCAT(VARIABLE("?p1"), ",") => succeed
+      case Aggregate.GROUP_CONCAT(VARIABLE("?p1"), "|") => succeed
       case _                                            => fail
     }
   }

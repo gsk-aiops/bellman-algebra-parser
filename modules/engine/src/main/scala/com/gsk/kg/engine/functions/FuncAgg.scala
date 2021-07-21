@@ -106,7 +106,6 @@ object FuncAgg {
     )
   }
 
-  // TODO: Implement group-concat https://github.com/gsk-aiops/bellman/issues/202
   def groupConcat(col: Column, separator: String): Column =
-    ???
+    array_join(collect_list(col), separator)
 }

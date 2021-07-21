@@ -9,7 +9,7 @@ object AggregateParser {
   def sample[_: P]: P[Unit]      = P("sample")
   def min[_: P]: P[Unit]         = P("min")
   def max[_: P]: P[Unit]         = P("max")
-  def groupConcat[_: P]: P[Unit] = P("groupConcat")
+  def groupConcat[_: P]: P[Unit] = P("group_concat")
   def avg[_: P]: P[Unit]         = P("avg")
 
   def countParen[_: P]: P[Aggregate] =
@@ -27,14 +27,13 @@ object AggregateParser {
   def groupConcatParen[_: P]: P[Aggregate] =
     P(
       "(" ~
-        groupConcat ~
+        groupConcat ~ "(separator " ~ "'" ~ CharsWhile(
+          _ != '''
+        ).! ~ "'" ~ ")" ~
         StringValParser.variable ~
-        "\"" ~
-        CharsWhile(_ != '\"').! ~
-        "\"" ~
         ")"
     )
-      .map(p => Aggregate.GROUP_CONCAT(p._1, p._2))
+      .map(p => Aggregate.GROUP_CONCAT(p._2, p._1))
 
   def aggregatePatterns[_: P]: P[Aggregate] =
     P(
