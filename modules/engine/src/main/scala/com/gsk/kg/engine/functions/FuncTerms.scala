@@ -3,9 +3,10 @@ package com.gsk.kg.engine.functions
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.{concat => cc, _}
+
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
-import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 object FuncTerms {
 
