@@ -3,8 +3,8 @@ package com.gsk.kg.engine.functions
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.{concat => cc, _}
-
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
 
 object FuncTerms {
@@ -108,8 +108,8 @@ object FuncTerms {
         when( // if the literal is a simple literal, return xsd:string
           isLiteral(col),
           "xsd:string"
-        ).otherwise( // input not a literal; not defined by w3 spec
-          lit("")
+        ).otherwise( // input was not a literal; behavior not defined by w3 spec
+          nullLiteral
         )
       )
     )
