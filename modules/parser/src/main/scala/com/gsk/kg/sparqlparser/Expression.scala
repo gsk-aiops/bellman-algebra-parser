@@ -45,9 +45,10 @@ object BuiltInFunc {
   final case class CONCAT(
       appendTo: Expression,
       append: List[Expression]
-  )                                    extends BuiltInFunc
-  final case class STR(s: Expression)  extends BuiltInFunc
-  final case class LANG(s: Expression) extends BuiltInFunc
+  )                                        extends BuiltInFunc
+  final case class STR(s: Expression)      extends BuiltInFunc
+  final case class LANG(s: Expression)     extends BuiltInFunc
+  final case class DATATYPE(s: Expression) extends BuiltInFunc
   final case class LANGMATCHES(s: Expression, range: Expression)
       extends BuiltInFunc
   final case class LCASE(s: Expression)                    extends BuiltInFunc

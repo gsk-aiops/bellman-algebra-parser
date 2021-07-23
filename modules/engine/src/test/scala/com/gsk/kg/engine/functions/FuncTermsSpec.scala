@@ -97,6 +97,26 @@ class FuncTermsSpec
       }
     }
 
+    "FuncTerms.datatype" should {
+      "return the datatype IRI of a literal" in {
+        val df = List(
+          "\"1.1\"^^xsd:double", // a typed literal
+          "\"1\"",               // a simple literal
+          "\"foo\"@es",          // a literal with a language tag
+          "not a literal"
+        ).toDF("literals")
+
+        df.select(
+          FuncTerms.datatype(df("literals"))
+        ).collect shouldEqual Array(
+          Row("xsd:double"),
+          Row("xsd:string"),
+          Row("rdf:langString"),
+          Row(null)
+        )
+      }
+    }
+
     "FuncTerms.iri" should {
 
       "do nothing for IRIs" in {

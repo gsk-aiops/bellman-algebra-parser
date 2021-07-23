@@ -174,6 +174,7 @@ object ToTree extends LowPriorityToTreeInstances0 {
           case ExpressionF.LANGMATCHES(s, range) =>
             Node("LANGMATCHES", Stream(s, Leaf(range.toString)))
           case ExpressionF.LANG(s)      => Node("LANG", Stream(s))
+          case ExpressionF.DATATYPE(s)  => Node("DATATYPE", Stream(s))
           case ExpressionF.LCASE(s)     => Node("LCASE", Stream(s))
           case ExpressionF.UCASE(s)     => Node("UCASE", Stream(s))
           case ExpressionF.ISLITERAL(s) => Node("ISLITERAL", Stream(s))

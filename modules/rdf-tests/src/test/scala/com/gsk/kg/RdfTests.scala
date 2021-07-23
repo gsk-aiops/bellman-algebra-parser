@@ -161,7 +161,9 @@ class RdfTests extends AnyWordSpec with Matchers with SparkSpec {
       .toDF()
 
     RdfFormatter.formatDataFrame(
-      formatDF(df.select(explode(col(df.columns.head)))), Config.default.copy(formatRdfOutput = true))
+      formatDF(df.select(explode(col(df.columns.head)))),
+      Config.default.copy(formatRdfOutput = true)
+    )
   }
 
   def formatDF(df: DataFrame): DataFrame =

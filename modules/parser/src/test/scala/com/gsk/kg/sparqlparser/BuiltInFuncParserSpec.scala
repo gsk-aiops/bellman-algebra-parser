@@ -314,6 +314,16 @@ class BuiltInFuncParserSpec extends AnyFlatSpec {
     }
   }
 
+  "DATATYPE parser" should "return DATATYPE type" in {
+    val p =
+      fastparse.parse("""(datatype ?d)""", BuiltInFuncParser.datatypeParen(_))
+    p.get.value match {
+      case DATATYPE(VARIABLE("?d")) =>
+        succeed
+      case _ => fail
+    }
+  }
+
   "LANG parser" should "return LANG type" in {
     val p =
       fastparse.parse("""(lang ?d)""", BuiltInFuncParser.langParen(_))

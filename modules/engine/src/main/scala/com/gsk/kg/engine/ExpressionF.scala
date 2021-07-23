@@ -63,6 +63,7 @@ object ExpressionF {
   final case class COALESCE[A](xs: List[A])             extends ExpressionF[A]
   final case class URI[A](s: A)                         extends ExpressionF[A]
   final case class LANG[A](s: A)                        extends ExpressionF[A]
+  final case class DATATYPE[A](s: A)                    extends ExpressionF[A]
   final case class LANGMATCHES[A](s: A, range: String)  extends ExpressionF[A]
   final case class LCASE[A](s: A)                       extends ExpressionF[A]
   final case class UCASE[A](s: A)                       extends ExpressionF[A]
@@ -133,6 +134,7 @@ object ExpressionF {
       case Conditional.BOUND(e)                 => BOUND(e)
       case Conditional.COALESCE(xs)             => COALESCE(xs)
       case BuiltInFunc.URI(s)                   => URI(s)
+      case BuiltInFunc.DATATYPE(s)              => DATATYPE(s)
       case BuiltInFunc.LANG(s)                  => LANG(s)
       case BuiltInFunc.LANGMATCHES(s, StringVal.STRING(range)) =>
         LANGMATCHES(s, range)
@@ -252,6 +254,8 @@ object ExpressionF {
         BuiltInFunc.UCASE(s.asInstanceOf[StringLike])
       case LANG(s) =>
         BuiltInFunc.LANG(s.asInstanceOf[StringLike])
+      case DATATYPE(s) =>
+        BuiltInFunc.DATATYPE(s.asInstanceOf[StringLike])
       case LANGMATCHES(s, range) =>
         BuiltInFunc.LANGMATCHES(
           s.asInstanceOf[StringLike],
@@ -419,6 +423,7 @@ object ExpressionF {
         case STRLANG(e, tag)            => FuncTerms.strlang(e, tag).pure[M]
         case URI(s)                     => FuncTerms.iri(s).pure[M]
         case LANG(s)                    => FuncTerms.lang(s).pure[M]
+        case DATATYPE(s)                => FuncTerms.datatype(s).pure[M]
         case ISLITERAL(s)               => FuncTerms.isLiteral(s).pure[M]
         case ISBLANK(s)                 => FuncTerms.isBlank(s).pure[M]
         case ISNUMERIC(s)               => FuncTerms.isNumeric(s).pure[M]

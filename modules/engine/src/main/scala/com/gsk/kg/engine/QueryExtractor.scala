@@ -242,6 +242,7 @@ object QueryExtractor {
       case COALESCE(xs)                    => s"(coalesce ${xs.mkString(", ")})"
       case ExpressionF.URI(s)              => s"(uri $s)"
       case LANG(s)                         => s"(lang $s)"
+      case DATATYPE(s)                     => s"(datatype $s)"
       case LANGMATCHES(s, range)           => s"(langmatches $s $range)"
       case LCASE(s)                        => s"(lcase $s)"
       case UCASE(s)                        => s"(ucase $s)"

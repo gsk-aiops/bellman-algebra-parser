@@ -5,6 +5,8 @@ import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.{concat => cc, _}
 
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
+import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 object FuncTerms {
 
@@ -19,7 +21,7 @@ object FuncTerms {
 
   /** Returns the string representation of a column.  It only modifies the data in the column if
     * it contains an URI wrapped in angle brackets, in which case it removes it.
-    * @param col
+    * @param value
     * @return
     */
   def str(value: String): Column =
@@ -88,6 +90,30 @@ object FuncTerms {
     * @return
     */
   def uri(col: Column): Column = iri(col)
+
+  /** Implementation of SparQL DATATYPE on Spark dataframes
+    *
+    * @see [[https://www.w3.org/TR/sparql11-query/#func-datatype]]
+    * @param col
+    * @return a Column containing the datatype IRI of for each literal
+    */
+  def datatype(col: Column): Column =
+    when( // if the literal is a typed literal, return the datatype IRI
+      isTypedLiteral(col),
+      TypedLiteral(col).tag
+    ).otherwise(
+      when( // if the literal has a language tag, return rdf:langString
+        !lang(col).equalTo(lit("")),
+        "rdf:langString"
+      ).otherwise(
+        when( // if the literal is a simple literal, return xsd:string
+          isLiteral(col),
+          "xsd:string"
+        ).otherwise( // input was not a literal; behavior not defined by w3 spec
+          nullLiteral
+        )
+      )
+    )
 
   /** Implementation of SparQL LANG on Spark dataframes.
     *
