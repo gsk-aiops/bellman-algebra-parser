@@ -11,15 +11,14 @@ import higherkindness.droste._
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.RelationalGroupedDataset
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
 
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.SPOEncoder._
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
 import com.gsk.kg.engine.functions.FuncAgg
@@ -100,16 +99,6 @@ object Engine {
         }
     } yield dataFrame
   }
-
-  implicit val spoEncoder: Encoder[SparkRow] = RowEncoder(
-    StructType(
-      List(
-        StructField("s", StringType),
-        StructField("p", StringType),
-        StructField("o", StringType)
-      )
-    )
-  )
 
   private def evaluateNoop(str: String)(implicit sc: SQLContext): M[Multiset] =
     for {
