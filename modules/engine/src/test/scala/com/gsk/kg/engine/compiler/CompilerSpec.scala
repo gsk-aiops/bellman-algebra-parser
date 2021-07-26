@@ -345,7 +345,7 @@ class CompilerSpec
         )
       }
 
-      "include graphs when explicit FROM" in {
+      "exclude graphs when explicit FROM and inclusive mode" in {
 
         val df: DataFrame = List(
           ("_:s1", "p1", "o1", "<http://example.org/graph1>"),
@@ -365,10 +365,9 @@ class CompilerSpec
           config.copy(isDefaultGraphExclusive = false)
         )
 
-        result.right.get.collect().length shouldEqual 2
+        result.right.get.collect().length shouldEqual 1
         result.right.get.collect().toSet shouldEqual Set(
-          Row("_:s1", "\"p1\"", "\"o1\""),
-          Row("_:s2", "\"p2\"", "\"o2\"")
+          Row("_:s1", "\"p1\"", "\"o1\"")
         )
       }
     }

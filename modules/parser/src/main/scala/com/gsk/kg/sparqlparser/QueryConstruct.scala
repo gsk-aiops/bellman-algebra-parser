@@ -4,6 +4,7 @@ import cats.syntax.either._
 
 import org.apache.jena.graph.Node
 import org.apache.jena.query.QueryFactory
+import org.apache.jena.query.{Query => JenaQuery}
 import org.apache.jena.sparql.algebra.Algebra
 import org.apache.jena.sparql.core.{Quad => JenaQuad}
 
@@ -35,14 +36,7 @@ object QueryConstruct {
         verboseFailures = true
       )
       .toParserResult
-    defaultGraphs =
-      if (config.isDefaultGraphExclusive) {
-        query.getGraphURIs.asScala.toList
-          .map(wrapInAngleBrackets)
-          .map(URIVAL) :+ URIVAL("")
-      } else {
-        Nil
-      }
+    defaultGraphs = getDefaultGraphs(config, query)
     namedGraphs = query.getNamedGraphURIs.asScala.toList
       .map(wrapInAngleBrackets)
       .map(URIVAL)
@@ -73,6 +67,21 @@ object QueryConstruct {
         ).asLeft
     }
   } yield result
+
+  private def getDefaultGraphs(
+      config: Config,
+      query: JenaQuery
+  ): List[URIVAL] = {
+    lazy val graphs = query.getGraphURIs.asScala.toList
+
+    if (config.isDefaultGraphExclusive || graphs.nonEmpty) {
+      graphs
+        .map(wrapInAngleBrackets)
+        .map(URIVAL) :+ URIVAL("")
+    } else {
+      Nil
+    }
+  }
 
   private def wrapInAngleBrackets(string: String): String =
     s"<$string>"
