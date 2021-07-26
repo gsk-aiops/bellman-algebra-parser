@@ -315,6 +315,31 @@ lazy val `bellman-rdf-tests` = project
   .dependsOn(`bellman-algebra-parser` % "compile->compile;test->test")
   .dependsOn(`bellman-spark-engine` % "compile->compile;test->test")
 
+lazy val `bellman-benchmarks` = project
+  .in(file("modules/benchmarks"))
+  .settings(moduleName := "bellman-benchmarks")
+  .settings(buildSettings)
+  .settings(noPublishSettings)
+  .settings(commonDependencies)
+  .settings(compilerPlugins)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.apache.jena"  % "jena-arq" % Versions("jena"),
+      "com.holdenkarau" %% "spark-testing-base" % Versions(
+        "spark-testing-base"
+      )                   % Test,
+      "org.apache.spark" %% "spark-sql" % Versions("spark") % Provided
+    ),
+    dependencyOverrides ++= Seq(
+      "com.fasterxml.jackson.core"    % "jackson-databind" % Versions("jackson"),
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions(
+        "jackson"
+      )
+    )
+  )
+  .dependsOn(`bellman-spark-engine`)
+  .enablePlugins(JmhPlugin)
+
 addCommandAlias(
   "build-microsite",
   ";bellman-site/run ;bellman-site/makeMicrosite"
