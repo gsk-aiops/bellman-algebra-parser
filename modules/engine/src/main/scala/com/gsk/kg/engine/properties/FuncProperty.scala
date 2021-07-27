@@ -101,7 +101,8 @@ object FuncProperty {
 
     val (m, pathsFrame) = constructPathFrame(onePaths, onePaths, limit = None)
 
-    val paths = (1 to m).map(n => getNLengthPathTriples(pathsFrame, n)).toList
+    val paths =
+      (1 to m).map(n => getNLengthPathTriples(df, pathsFrame, n)).toList
 
     val oneOrMorePaths = Foldable[List].fold(paths)
 
@@ -159,9 +160,67 @@ object FuncProperty {
     val (_, pathsFrame) =
       constructPathFrame(onePaths, onePaths, limit = Some(n))
 
-    toSPO(getNLengthPathTriples(pathsFrame, n))
+    toSPO(getNLengthPathTriples(df, pathsFrame, n))
       .asRight[Column]
       .asRight[EngineError]
+  }
+
+  def betweenNAndM(
+      df: DataFrame,
+      maybeN: Option[Int],
+      maybeM: Option[Int],
+      e: ColOrDf
+  )(implicit
+      sc: SQLContext
+  ): Result[ColOrDf] = {
+
+    val checkArgs: Either[EngineError, (Int, Int)] = (maybeN, maybeM) match {
+      case (Some(n), Some(m)) if n < 0 || m < 0 =>
+        EngineError
+          .InvalidPropertyPathArguments(
+            "Arguments n and m can't be less than zero"
+          )
+          .asLeft
+      case (Some(n), Some(m)) if n >= m =>
+        (n, n).asRight // N >= M
+      case (Some(n), Some(m)) =>
+        (n, m).asRight // N < M
+      case (Some(n), None) =>
+        // TODO: Should be set a hard limit by configuration to avoid cycles???
+        (n, 100).asRight // N or more
+      case (None, Some(m)) =>
+        (0, m).asRight // Between 0 and M
+      case (None, None) =>
+        EngineError
+          .InvalidPropertyPathArguments(
+            "Arguments n and m can't be both null"
+          )
+          .asLeft
+    }
+
+    checkArgs.flatMap { case (effectiveN, effectiveM) =>
+      val onePaths = getOneLengthPaths(e match {
+        case Right(predDf) => predDf
+        case Left(predCol) => df.filter(predCol <=> df("p"))
+      })
+
+      val (maxLength, pathsFrame) =
+        constructPathFrame(onePaths, onePaths, limit = Some(effectiveM))
+
+      val effectiveRange =
+        effectiveN to (if (effectiveM > maxLength) maxLength else effectiveM)
+
+      val paths =
+        effectiveRange
+          .map(i => getNLengthPathTriples(df, pathsFrame, i))
+          .toList
+
+      val betweenNAndMPaths = Foldable[List].fold(paths)
+
+      toSPO(betweenNAndMPaths)
+        .asRight[Column]
+        .asRight[EngineError]
+    }
   }
 
   def uri(s: String): ColOrDf =
