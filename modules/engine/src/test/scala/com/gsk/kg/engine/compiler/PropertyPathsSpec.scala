@@ -350,18 +350,33 @@ class PropertyPathsSpec
         )
       }
 
-      "fixed length {n,} property path" ignore {
+      "fixed length {n,} property path" in {
 
         val df = List(
           (
-            "<http://example.org/alice>",
+            "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/bob>"
+            "<http://example.org/Bob>"
           ),
           (
-            "<http://example.org/bob>",
+            "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/charles>"
+            "<http://example.org/Charles>"
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/name>",
+            "\"Charles\""
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Daniel>"
+          ),
+          (
+            "<http://example.org/Daniel>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Erick>"
           )
         ).toDF("s", "p", "o")
 
@@ -371,27 +386,67 @@ class PropertyPathsSpec
             |
             |SELECT ?s ?o
             |WHERE {
-            | ?s foaf:knows{1,} ?o .
+            | ?s foaf:knows{2,} ?o .
             |}
             |""".stripMargin
 
         val result = Compiler.compile(df, query, config)
 
-        result.right.get.collect.toSet shouldEqual Set()
+        result.right.get.collect.toSet shouldEqual Set(
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Erick>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://example.org/Erick>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            "<http://example.org/Erick>"
+          )
+        )
       }
 
-      "fixed length {,n} property path" ignore {
+      "fixed length {,n} property path" in {
 
         val df = List(
           (
-            "<http://example.org/alice>",
+            "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/bob>"
+            "<http://example.org/Bob>"
           ),
           (
-            "<http://example.org/bob>",
+            "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/charles>"
+            "<http://example.org/Charles>"
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/name>",
+            "\"Charles\""
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Daniel>"
+          ),
+          (
+            "<http://example.org/Daniel>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Erick>"
           )
         ).toDF("s", "p", "o")
 
@@ -401,13 +456,66 @@ class PropertyPathsSpec
             |
             |SELECT ?s ?o
             |WHERE {
-            | ?s foaf:knows{,1} ?o .
+            | ?s foaf:knows{,2} ?o .
             |}
             |""".stripMargin
 
         val result = Compiler.compile(df, query, config)
 
-        result.right.get.collect.toSet shouldEqual Set()
+        result.right.get.collect.toSet shouldEqual Set(
+          Row(
+            "\"Charles\"",
+            "\"Charles\""
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Alice>"
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Bob>"
+          ),
+          Row(
+            "<http://example.org/Alice>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://example.org/Bob>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            "<http://example.org/Erick>"
+          ),
+          Row(
+            "<http://example.org/Daniel>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Daniel>",
+            "<http://example.org/Erick>"
+          ),
+          Row(
+            "<http://example.org/Erick>",
+            "<http://example.org/Erick>"
+          )
+        )
       }
 
       "fixed length {n} property path" in {
