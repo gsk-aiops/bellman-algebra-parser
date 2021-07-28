@@ -1,20 +1,24 @@
 package com.gsk.kg.benchmarks
 
-import java.util.concurrent.TimeUnit
+import cats.data.NonEmptyList
+
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.openjdk.jmh.annotations._
-import org.openjdk.jmh.infra.Blackhole
+
+import com.gsk.kg.config.Config
+import com.gsk.kg.engine.functions.FuncArithmetics
 import com.gsk.kg.engine.functions.FuncForms
+import com.gsk.kg.engine.rdf.RdfType
 import com.gsk.kg.engine.rdf.TypedFuncs
 import com.gsk.kg.engine.rdf.Typer
-import com.gsk.kg.engine.rdf.RdfType
-import org.apache.spark.sql.DataFrame
-import com.gsk.kg.engine.functions.FuncArithmetics
-import com.gsk.kg.config.Config
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.SparkConf
-import cats.data.NonEmptyList
+
+import java.util.concurrent.TimeUnit
+
+import org.openjdk.jmh.annotations._
+import org.openjdk.jmh.infra.Blackhole
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.Throughput))
@@ -34,7 +38,7 @@ class Benchmarks {
     .builder()
     .master("local[1]")
     .config(sparkConf)
-    .getOrCreate();
+    .getOrCreate()
 
   import spark.implicits._
 
