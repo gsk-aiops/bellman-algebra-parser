@@ -104,8 +104,8 @@ lazy val bellman = project
   .in(file("."))
   .settings(buildSettings)
   .settings(noPublishSettings)
-  .dependsOn(`bellman-algebra-parser`, `bellman-spark-engine`)
-  .aggregate(`bellman-algebra-parser`, `bellman-spark-engine`, `bellman-site`)
+  .dependsOn(`bellman-algebra-parser`, `bellman-spark-engine`, `bellman-site`, `bellman-benchmarks`)
+  .aggregate(`bellman-algebra-parser`, `bellman-spark-engine`, `bellman-site`, `bellman-benchmarks`)
 
 lazy val `bellman-algebra-parser` = project
   .in(file("modules/parser"))

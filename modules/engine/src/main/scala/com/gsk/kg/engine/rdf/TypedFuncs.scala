@@ -1,8 +1,9 @@
 package com.gsk.kg.engine.rdf
 
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{concat => cc, _}
 import org.apache.spark.sql.types.BooleanType
+import cats.data.NonEmptyList
 
 object TypedFuncs {
 
@@ -124,7 +125,6 @@ object TypedFuncs {
     )
   }
 
-
   def add(l: Column, r: Column): Column =
     promoteNumericArgsToNumericResult(l, r)(_ + _)
 
@@ -136,5 +136,53 @@ object TypedFuncs {
 
   def divide(l: Column, r: Column): Column =
     promoteNumericArgsToNumericResult(l, r)(_ / _)
+
+  def uri(col: Column): Column =
+    when(
+      col("type") === RdfType.Uri.repr,
+      col
+    ).when(
+      col("type") === RdfType.String.repr,
+      Typer.createRecord(format_string("<%s>", col("value")), RdfType.Uri.repr)
+    )
+
+  def concat(appendTo: Column, append: NonEmptyList[Column]): Column = {
+    val concatValues = append.toList.foldLeft(appendTo("value")) {
+      case (acc, elem) =>
+        cc(acc, elem("value"))
+    }
+
+    when(
+      areAllArgsSameTypeAndSameTags(appendTo, append.toList),
+      when(
+        appendTo("lang").isNotNull,
+        Typer.createRecord(concatValues, RdfType.String.repr, appendTo("lang"))
+      ).otherwise(
+        Typer.createRecord(concatValues, RdfType.String.repr)
+      )
+    ).otherwise(
+      Typer.createRecord(concatValues, RdfType.String.repr)
+    )
+  }
+
+  private def areAllArgsSameTypeAndSameTags(
+      arg1: Column,
+      args: List[Column]
+  ): Column = {
+    when(
+      arg1("lang").isNotNull, {
+        args.foldLeft(lit(true)) { case (acc, elem) =>
+          acc && when(
+            elem("lang").isNotNull,
+            arg1("lang") === elem("lang")
+          ).otherwise(lit(false))
+        }
+      }
+    ).otherwise(
+      args.foldLeft(lit(true)) { case (acc, elem) =>
+        acc && arg1("type") === elem("type")
+      }
+    )
+  }
 
 }
