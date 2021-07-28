@@ -380,5 +380,362 @@ class FuncPropertySpec
         )
       }
     }
+
+    "BetweenNAndM function" should {
+
+      "return expected values " when {
+
+        "from Some(1) to Some(3) path length (n < m)" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          val n = 1
+          val m = 3
+
+          // ?s foaf:knows{1, 3} ?o
+          val result =
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "from Some(3) to Some(2) path length (n > m)" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          val n = 3
+          val m = 2
+
+          // ?s foaf:knows{3, 2} ?o
+          val result =
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "from Some(3) to Some(3) path length (n == m)" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          val n = 3
+          val m = 3
+
+          // ?s foaf:knows{3, 3} ?o
+          val result =
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "from Some(0) to Some(2) path length (with zero path length)" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          val n = 0
+          val m = 2
+
+          // ?s foaf:knows{0, 2} ?o
+          val result =
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              null,
+              "<http://example.org/Alice>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              null,
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              null,
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              null,
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Erick>",
+              null,
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "\"Charles\"",
+              null,
+              "\"Charles\""
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "from Some(-1) to Some(-1) path length (error because n or m i less that 0)" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          val n = -1
+          val m = -1
+
+          // ?s foaf:knows{-1, -1} ?o
+          val result =
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+
+          result shouldBe a[Left[_, _]]
+        }
+
+        // TODO: add cases for n = None and m = None
+      }
+    }
   }
 }

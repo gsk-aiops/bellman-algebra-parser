@@ -95,7 +95,7 @@ object PathFrame {
         )
         .select(stepColNames.head, stepColNames.tail: _*)
 
-      (i, stepAcc)
+      (i + 1, stepAcc)
     }
 
     val i = 1
@@ -137,25 +137,37 @@ object PathFrame {
     vertices
       .withColumn("p", nullLiteral)
       .withColumn("o", vertices("s"))
+      .withColumnRenamed("s", s"$SIdx")
+      .withColumnRenamed("p", s"$PIdx")
+      .withColumnRenamed("o", s"$OIdx")
   }
 
   /** @param pathDf
     * @param nPath
     * @return
     */
-  def getNLengthPathTriples(pathDf: DataFrame, nPath: Int): DataFrame = {
-    val oSlice = OIdx + (2 * (nPath - 1))
+  def getNLengthPathTriples(
+      df: DataFrame,
+      pathDf: DataFrame,
+      nPath: Int
+  ): DataFrame = {
+    if (nPath == 0) {
+      getZeroLengthPaths(df)
+    } else {
 
-    val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString)
+      val oSlice = OIdx + (2 * (nPath - 1))
 
-    val nPaths = pathDf
-      .select(cols.head, cols.tail: _*)
-      .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
-        acc && pathDf(elem).isNotNull
-      })
-      .withColumnRenamed(s"$oSlice", s"$OIdx")
+      val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString)
 
-    nPaths
+      val nPaths = pathDf
+        .select(cols.head, cols.tail: _*)
+        .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
+          acc && pathDf(elem).isNotNull
+        })
+        .withColumnRenamed(s"$oSlice", s"$OIdx")
+
+      nPaths
+    }
   }
 
   /** It merges two dataframes by adding rows from the right dataframe to the second and setting to null those columns
