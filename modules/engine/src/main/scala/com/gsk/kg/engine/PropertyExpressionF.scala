@@ -39,11 +39,13 @@ object PropertyExpressionF {
             M.liftF(FuncProperty.zeroOrMore(df, e))
           case ZeroOrOneF(e) =>
             M.liftF(FuncProperty.zeroOrOne(df, e))
-          case NotOneOfF(es) => unknownPropertyPath("notOneOf")
+          case NotOneOfF(es) =>
+            M.liftF(FuncProperty.notOneOf(df, es))
           case BetweenNAndMF(n, m, e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e))
           case ExactlyNF(n, e) =>
-            M.liftF(FuncProperty.exactlyN(df, n, e))
+//            M.liftF(FuncProperty.exactlyN(df, n, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(n), e))
           case NOrMoreF(n, e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e))
           case BetweenZeroAndNF(n, e) =>

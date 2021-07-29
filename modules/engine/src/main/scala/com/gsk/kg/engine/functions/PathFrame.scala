@@ -4,12 +4,12 @@ import cats.kernel.Monoid
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions._
 
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 object PathFrame {
 
@@ -194,11 +194,26 @@ object PathFrame {
     newDf1.unionByName(newDf2)
   }
 
-  def toSPO(pf: PathFrame): DataFrame = {
-    pf
-      .withColumnRenamed(s"$SIdx", "s")
-      .withColumnRenamed(s"$PIdx", "p")
-      .withColumnRenamed(s"$OIdx", "o")
+  def toSPOG(pf: PathFrame): DataFrame = {
+
+    def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
+
+    val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
+      case (accDf, (idx, name)) =>
+        if (hasColumn(accDf, idx.toString)) {
+          accDf.withColumnRenamed(idx.toString, name)
+        } else {
+          accDf.withColumn(name, nullLiteral)
+        }
+    }
+
+    // TODO: The graph column should be propagated across the PathFrame instead of added to default graph
+    // See: GSK issue AIPL-3665
+    if (hasColumn(df, "g")) {
+      df
+    } else {
+      df.withColumn("g", lit(""))
+    }
   }
 
   implicit def monoid(implicit

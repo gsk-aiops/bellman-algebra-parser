@@ -106,7 +106,7 @@ object FuncProperty {
 
     val oneOrMorePaths = Foldable[List].fold(paths)
 
-    toSPO(oneOrMorePaths)
+    toSPOG(oneOrMorePaths)
       .asRight[Column]
       .asRight[EngineError]
   }
@@ -120,11 +120,11 @@ object FuncProperty {
       case Left(_)       => df
     }
 
-    val zeroPaths = getZeroLengthPaths(df)
+    val zeroPaths = toSPOG(getZeroLengthPaths(df))
 
     oneOrMore(exprDf, e).flatMap {
       case Right(oneOrMorePaths) =>
-        toSPO(oneOrMorePaths union zeroPaths)
+        (oneOrMorePaths union zeroPaths)
           .asRight[Column]
           .asRight[EngineError]
       case Left(_) =>
@@ -145,7 +145,7 @@ object FuncProperty {
 
     val zeroPaths = getZeroLengthPaths(df)
 
-    toSPO(onePaths union zeroPaths)
+    toSPOG(onePaths union zeroPaths)
       .asRight[Column]
       .asRight[EngineError]
   }
@@ -160,7 +160,7 @@ object FuncProperty {
     val (_, pathsFrame) =
       constructPathFrame(onePaths, onePaths, limit = Some(n))
 
-    toSPO(getNLengthPathTriples(df, pathsFrame, n))
+    toSPOG(getNLengthPathTriples(df, pathsFrame, n))
       .asRight[Column]
       .asRight[EngineError]
   }
@@ -217,9 +217,36 @@ object FuncProperty {
 
       val betweenNAndMPaths = Foldable[List].fold(paths)
 
-      toSPO(betweenNAndMPaths)
+      toSPOG(betweenNAndMPaths)
         .asRight[Column]
         .asRight[EngineError]
+    }
+  }
+
+  def notOneOf(df: DataFrame, es: List[ColOrDf]): Result[ColOrDf] = {
+
+    val resolveColCnd: ColOrDf => Result[Column] = { expr: ColOrDf =>
+      expr match {
+        case Right(_) =>
+          EngineError
+            .InvalidPropertyPathArguments(
+              "Dataframe not allowed as argument for NotOneOf"
+            )
+            .asLeft
+        case Left(predCol) =>
+          (predCol =!= df("p")).asRight
+      }
+    }
+
+    val zero = lit(true).asRight[EngineError]
+
+    es.foldLeft(zero) { case (accOrError, colOrDf) =>
+      for {
+        acc    <- accOrError
+        colCnd <- resolveColCnd(colOrDf)
+      } yield acc && colCnd
+    }.map { cnd =>
+      df.filter(cnd).asRight[Column]
     }
   }
 

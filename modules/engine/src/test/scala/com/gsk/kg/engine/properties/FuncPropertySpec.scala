@@ -175,17 +175,20 @@ class FuncPropertySpec
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
+            "<http://example.org/Bob>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           ),
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           )
         )
       }
@@ -219,41 +222,50 @@ class FuncPropertySpec
 
         val result = FuncProperty.zeroOrMore(df, knowsUriFunc)
 
+        result.right.get.right.get.show(false)
+
         result.right.get.right.get.collect().toSet shouldEqual Set(
           Row(
             "<http://example.org/Alice>",
             null,
-            "<http://example.org/Alice>"
+            "<http://example.org/Alice>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             null,
-            "<http://example.org/Bob>"
+            "<http://example.org/Bob>",
+            ""
           ),
           Row(
             "<http://example.org/Charles>",
             null,
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           ),
           Row(
             "\"Charles\"",
             null,
-            "\"Charles\""
+            "\"Charles\"",
+            ""
           ),
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
+            "<http://example.org/Bob>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           ),
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           )
         )
       }
@@ -291,32 +303,38 @@ class FuncPropertySpec
           Row(
             "<http://example.org/Alice>",
             null,
-            "<http://example.org/Alice>"
+            "<http://example.org/Alice>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             null,
-            "<http://example.org/Bob>"
+            "<http://example.org/Bob>",
+            ""
           ),
           Row(
             "<http://example.org/Charles>",
             null,
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           ),
           Row(
             "\"Charles\"",
             null,
-            "\"Charles\""
+            "\"Charles\"",
+            ""
           ),
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
+            "<http://example.org/Bob>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           )
         )
       }
@@ -365,17 +383,20 @@ class FuncPropertySpec
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
+            "<http://example.org/Charles>",
+            ""
           ),
           Row(
             "<http://example.org/Bob>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Daniel>"
+            "<http://example.org/Daniel>",
+            ""
           ),
           Row(
             "<http://example.org/Charles>",
             "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Erick>"
+            "<http://example.org/Erick>",
+            ""
           )
         )
       }
@@ -429,47 +450,56 @@ class FuncPropertySpec
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -518,12 +548,14 @@ class FuncPropertySpec
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -572,12 +604,14 @@ class FuncPropertySpec
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -626,67 +660,80 @@ class FuncPropertySpec
             Row(
               "<http://example.org/Alice>",
               null,
-              "<http://example.org/Alice>"
+              "<http://example.org/Alice>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "\"Charles\"",
               null,
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -777,32 +824,38 @@ class FuncPropertySpec
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -850,67 +903,80 @@ class FuncPropertySpec
             Row(
               "\"Charles\"",
               null,
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               null,
-              "<http://example.org/Alice>"
+              "<http://example.org/Alice>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
           )
         }
@@ -952,6 +1018,106 @@ class FuncPropertySpec
             FuncProperty.betweenNAndM(df, None, None, knowsUriFunc)
 
           result shouldBe a[Left[_, _]]
+        }
+      }
+    }
+
+    "NotOneOf function" should {
+
+      "return expected values" when {
+
+        "one uri" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+          // ?s !foaf:knows ?o
+          val result =
+            FuncProperty.notOneOf(df, List(knowsUriFunc))
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            )
+          )
+        }
+
+        "multiple uris" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          lazy val knowsUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+          lazy val fooUriFunc =
+            FuncProperty.uri("<http://xmlns.org/foaf/0.1/foo")
+
+          // ?s !(foaf:knows|foaf:foo) ?o
+          val result =
+            FuncProperty.notOneOf(df, List(knowsUriFunc, fooUriFunc))
+
+          result.right.get.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            )
+          )
         }
       }
     }
