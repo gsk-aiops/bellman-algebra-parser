@@ -90,81 +90,6 @@ object FuncProperty {
     }
   }
 
-  def oneOrMore(df: DataFrame, e: ColOrDf)(implicit
-      sc: SQLContext
-  ): Result[ColOrDf] = {
-
-    val onePaths = getOneLengthPaths(e match {
-      case Right(predDf) => predDf
-      case Left(predCol) => df.filter(predCol <=> df("p"))
-    })
-
-    val (m, pathsFrame) = constructPathFrame(onePaths, onePaths, limit = None)
-
-    val paths =
-      (1 to m).map(n => getNLengthPathTriples(df, pathsFrame, n)).toList
-
-    val oneOrMorePaths = Foldable[List].fold(paths)
-
-    toSPOG(oneOrMorePaths)
-      .asRight[Column]
-      .asRight[EngineError]
-  }
-
-  def zeroOrMore(df: DataFrame, e: ColOrDf)(implicit
-      sc: SQLContext
-  ): Result[ColOrDf] = {
-
-    val exprDf = e match {
-      case Right(predDf) => predDf
-      case Left(_)       => df
-    }
-
-    val zeroPaths = toSPOG(getZeroLengthPaths(df))
-
-    oneOrMore(exprDf, e).flatMap {
-      case Right(oneOrMorePaths) =>
-        (oneOrMorePaths union zeroPaths)
-          .asRight[Column]
-          .asRight[EngineError]
-      case Left(_) =>
-        EngineError
-          .InvalidPropertyPathArguments(
-            "Error while processing zeroOrMore property path"
-          )
-          .asLeft[ColOrDf]
-    }
-  }
-
-  def zeroOrOne(df: DataFrame, e: ColOrDf): Result[ColOrDf] = {
-
-    val onePaths = getOneLengthPaths(e match {
-      case Right(predDf) => predDf
-      case Left(predCol) => df.filter(predCol <=> df("p"))
-    })
-
-    val zeroPaths = getZeroLengthPaths(df)
-
-    toSPOG(onePaths union zeroPaths)
-      .asRight[Column]
-      .asRight[EngineError]
-  }
-
-  def exactlyN(df: DataFrame, n: Int, e: ColOrDf): Result[ColOrDf] = {
-
-    val onePaths = getOneLengthPaths(e match {
-      case Right(predDf) => predDf
-      case Left(predCol) => df.filter(predCol <=> df("p"))
-    })
-
-    val (_, pathsFrame) =
-      constructPathFrame(onePaths, onePaths, limit = Some(n))
-
-    toSPOG(getNLengthPathTriples(df, pathsFrame, n))
-      .asRight[Column]
-      .asRight[EngineError]
-  }
-
   def betweenNAndM(
       df: DataFrame,
       maybeN: Option[Int],
@@ -193,7 +118,7 @@ object FuncProperty {
       case (None, None) =>
         EngineError
           .InvalidPropertyPathArguments(
-            "Arguments n and m can't be both null"
+            "Arguments n and m can't be both none"
           )
           .asLeft
     }
@@ -205,7 +130,7 @@ object FuncProperty {
       })
 
       val (maxLength, pathsFrame) =
-        constructPathFrame(onePaths, onePaths, limit = Some(effectiveM))
+        constructPathFrame(onePaths, limit = Some(effectiveM))
 
       val effectiveRange =
         effectiveN to (if (effectiveM > maxLength) maxLength else effectiveM)

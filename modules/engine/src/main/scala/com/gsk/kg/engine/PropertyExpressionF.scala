@@ -34,17 +34,16 @@ object PropertyExpressionF {
           case SeqExpressionF(pel, per) =>
             M.liftF(FuncProperty.seq(df, pel, per))
           case OneOrMoreF(e) =>
-            M.liftF(FuncProperty.oneOrMore(df, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e))
           case ZeroOrMoreF(e) =>
-            M.liftF(FuncProperty.zeroOrMore(df, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(0), None, e))
           case ZeroOrOneF(e) =>
-            M.liftF(FuncProperty.zeroOrOne(df, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(0), Some(1), e))
           case NotOneOfF(es) =>
             M.liftF(FuncProperty.notOneOf(df, es))
           case BetweenNAndMF(n, m, e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e))
           case ExactlyNF(n, e) =>
-//            M.liftF(FuncProperty.exactlyN(df, n, e))
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(n), e))
           case NOrMoreF(n, e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e))
