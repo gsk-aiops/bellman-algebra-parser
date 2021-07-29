@@ -44,9 +44,11 @@ object PropertyExpressionF {
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e))
           case ExactlyNF(n, e) =>
             M.liftF(FuncProperty.exactlyN(df, n, e))
-          case NOrMoreF(n, e)         => unknownPropertyPath("nOrMore")
-          case BetweenZeroAndNF(n, e) => unknownPropertyPath("betweenZeroAndN")
-          case UriF(s)                => FuncProperty.uri(s).pure[M]
+          case NOrMoreF(n, e) =>
+            M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e))
+          case BetweenZeroAndNF(n, e) =>
+            M.liftF(FuncProperty.betweenNAndM(df, None, Some(n), e))
+          case UriF(s) => FuncProperty.uri(s).pure[M]
         }
 
       val eval = scheme.cataM[M, PropertyExpressionF, T, ColOrDf](algebraM)

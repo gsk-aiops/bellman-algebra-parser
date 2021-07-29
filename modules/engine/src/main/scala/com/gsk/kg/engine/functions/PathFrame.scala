@@ -9,6 +9,8 @@ import org.apache.spark.sql.functions.lit
 
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 
+import scala.annotation.tailrec
+
 object PathFrame {
 
   // scalastyle: off
@@ -72,13 +74,14 @@ object PathFrame {
       limit: Option[Int]
   ): (Int, PathFrame) = {
 
+    @tailrec
     def step(
         oneLengthPaths: DataFrame,
         accPaths: DataFrame,
         i: Int
     ): (Int, DataFrame) = {
 
-      val stepSlice: Int => Int = x => x + (2 * i)
+      lazy val stepSlice: Int => Int = x => x + (2 * i)
 
       val stepColNames = (SIdx to stepSlice(OIdx)).map(_.toString)
 
@@ -95,25 +98,22 @@ object PathFrame {
         )
         .select(stepColNames.head, stepColNames.tail: _*)
 
-      (i + 1, stepAcc)
+      val continueTraversing = !stepAcc
+        .filter(stepAcc(s"${stepSlice(OIdx)}").isNotNull)
+        .isEmpty
+
+      limit match {
+        case Some(l) if continueTraversing && i < l =>
+          step(oneLengthPaths, stepAcc, i + 1)
+        case _ if continueTraversing =>
+          step(oneLengthPaths, stepAcc, i + 1)
+        case _ =>
+          (i, accPaths)
+      }
     }
 
     val i = 1
-
-    val (n, stepDf) = step(oneLengthPaths, accPaths, i)
-
-    val continueTraversing = !stepDf
-      .filter(stepDf(s"${OIdx + 2}").isNotNull)
-      .isEmpty
-
-    limit match {
-      case Some(l) if continueTraversing && l <= i =>
-        step(oneLengthPaths, accPaths, i + 1)
-      case _ if continueTraversing =>
-        step(oneLengthPaths, stepDf, i + 1)
-      case _ =>
-        (n, accPaths)
-    }
+    step(oneLengthPaths, accPaths, i)
   }
 
   def getOneLengthPaths(df: DataFrame): DataFrame = {
