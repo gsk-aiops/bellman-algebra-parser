@@ -21,7 +21,7 @@ jobs:
       - name: Update submodules
         run: git submodule init && git submodule update
       - name: Setup Scala
-        uses: olafurpg/setup-scala@v12
+        uses: olafurpg/setup-scala@v13
       - name: Cache dependencies
         uses: actions/cache@v2.1.6
         with:

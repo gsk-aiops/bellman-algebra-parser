@@ -20,7 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ADMIN_GITHUB_TOKEN }}
       - name: Setup Scala
-        uses: olafurpg/setup-scala@v12
+        uses: olafurpg/setup-scala@v13
       - uses: ts-graphviz/setup-graphviz@v1
       - uses: ruby/setup-ruby@v1
         with:
