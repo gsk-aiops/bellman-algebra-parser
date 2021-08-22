@@ -4,12 +4,10 @@ import cats.Foldable
 import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
-
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.FuncForms
 import com.gsk.kg.engine.functions.PathFrame._

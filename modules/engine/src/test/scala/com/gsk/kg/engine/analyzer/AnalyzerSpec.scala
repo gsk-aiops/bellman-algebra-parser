@@ -2,14 +2,12 @@ package com.gsk.kg.engine.analyzer
 
 import cats.data.NonEmptyChain
 import cats.implicits._
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Query
 import com.gsk.kg.sparqlparser.TestConfig
 import com.gsk.kg.sparqlparser.TestUtils
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

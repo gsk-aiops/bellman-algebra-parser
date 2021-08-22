@@ -2,14 +2,11 @@ package com.gsk.kg.engine
 
 import cats.data.NonEmptyList
 import cats.implicits._
-
 import higherkindness.droste._
 import higherkindness.droste.macros.deriveTraverse
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.functions.FuncArithmetics
 import com.gsk.kg.engine.functions.FuncDates
@@ -20,11 +17,10 @@ import com.gsk.kg.engine.functions.FuncStrings
 import com.gsk.kg.engine.functions.FuncTerms
 import com.gsk.kg.sparqlparser._
 
-/** [[ExpressionF]] is a pattern functor for the recursive
-  * [[Expression]].
+/** [[ExpressionF]] is a pattern functor for the recursive [[Expression]].
   *
-  * Using Droste's syntax, we get tree traversals for free such as the
-  * ones seen in [[getVariable]] or [[getString]]
+  * Using Droste's syntax, we get tree traversals for free such as the ones seen
+  * in [[getVariable]] or [[getString]]
   */
 @deriveTraverse sealed trait ExpressionF[+A]
 
@@ -202,33 +198,33 @@ object ExpressionF {
       case Aggregate.MAX(e)                            => MAX(e)
       case Aggregate.AVG(e)                            => AVG(e)
       case Aggregate.SAMPLE(e)                         => SAMPLE(e)
-      case Aggregate.GROUP_CONCAT(e, separator)        => GROUP_CONCAT(e, separator)
-      case StringVal.STRING(s)                         => STRING(s)
-      case StringVal.DT_STRING(s, tag)                 => DT_STRING(s, tag)
-      case StringVal.LANG_STRING(s, tag)               => LANG_STRING(s, tag)
-      case StringVal.NUM(s)                            => NUM(s)
-      case StringVal.VARIABLE(s)                       => VARIABLE(s)
-      case StringVal.URIVAL(s)                         => URIVAL(s)
-      case StringVal.BLANK(s)                          => BLANK(s)
-      case StringVal.BOOL(s)                           => BOOL(s)
-      case ConditionOrder.ASC(e)                       => ASC(e)
-      case ConditionOrder.DESC(e)                      => DESC(e)
-      case BuiltInFunc.UUID()                          => UUID()
-      case MathFunc.CEIL(s)                            => CEIL(s)
-      case MathFunc.ROUND(s)                           => ROUND(s)
-      case MathFunc.RAND()                             => RAND()
-      case MathFunc.ABS(s)                             => ABS(s)
-      case MathFunc.FLOOR(s)                           => FLOOR(s)
-      case BuiltInFunc.STRUUID()                       => STRUUID()
-      case DateTimeFunc.NOW()                          => NOW()
-      case DateTimeFunc.YEAR(s)                        => YEAR(s)
-      case DateTimeFunc.MONTH(s)                       => MONTH(s)
-      case DateTimeFunc.DAY(s)                         => DAY(s)
-      case DateTimeFunc.HOUR(s)                        => HOUR(s)
-      case DateTimeFunc.MINUTES(s)                     => MINUTES(s)
-      case DateTimeFunc.SECONDS(s)                     => SECONDS(s)
-      case DateTimeFunc.TIMEZONE(s)                    => TIMEZONE(s)
-      case DateTimeFunc.TZ(s)                          => TZ(s)
+      case Aggregate.GROUP_CONCAT(e, separator) => GROUP_CONCAT(e, separator)
+      case StringVal.STRING(s)                  => STRING(s)
+      case StringVal.DT_STRING(s, tag)          => DT_STRING(s, tag)
+      case StringVal.LANG_STRING(s, tag)        => LANG_STRING(s, tag)
+      case StringVal.NUM(s)                     => NUM(s)
+      case StringVal.VARIABLE(s)                => VARIABLE(s)
+      case StringVal.URIVAL(s)                  => URIVAL(s)
+      case StringVal.BLANK(s)                   => BLANK(s)
+      case StringVal.BOOL(s)                    => BOOL(s)
+      case ConditionOrder.ASC(e)                => ASC(e)
+      case ConditionOrder.DESC(e)               => DESC(e)
+      case BuiltInFunc.UUID()                   => UUID()
+      case MathFunc.CEIL(s)                     => CEIL(s)
+      case MathFunc.ROUND(s)                    => ROUND(s)
+      case MathFunc.RAND()                      => RAND()
+      case MathFunc.ABS(s)                      => ABS(s)
+      case MathFunc.FLOOR(s)                    => FLOOR(s)
+      case BuiltInFunc.STRUUID()                => STRUUID()
+      case DateTimeFunc.NOW()                   => NOW()
+      case DateTimeFunc.YEAR(s)                 => YEAR(s)
+      case DateTimeFunc.MONTH(s)                => MONTH(s)
+      case DateTimeFunc.DAY(s)                  => DAY(s)
+      case DateTimeFunc.HOUR(s)                 => HOUR(s)
+      case DateTimeFunc.MINUTES(s)              => MINUTES(s)
+      case DateTimeFunc.SECONDS(s)              => SECONDS(s)
+      case DateTimeFunc.TIMEZONE(s)             => TIMEZONE(s)
+      case DateTimeFunc.TZ(s)                   => TZ(s)
     }
 
   val toExpressionAlgebra: Algebra[ExpressionF, Expression] =

@@ -2,9 +2,7 @@ package com.gsk.kg.engine
 package optimizer
 
 import cats.implicits._
-
 import higherkindness.droste.Basis
-
 import com.gsk.kg.Graphs
 
 object Optimizer {

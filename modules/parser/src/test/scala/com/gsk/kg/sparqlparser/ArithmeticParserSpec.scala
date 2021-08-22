@@ -5,7 +5,6 @@ import com.gsk.kg.sparqlparser.Arithmetic.DIVIDE
 import com.gsk.kg.sparqlparser.Arithmetic.MULTIPLY
 import com.gsk.kg.sparqlparser.Arithmetic.SUBTRACT
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-
 import org.scalatest.flatspec.AnyFlatSpec
 
 class ArithmeticParserSpec extends AnyFlatSpec {

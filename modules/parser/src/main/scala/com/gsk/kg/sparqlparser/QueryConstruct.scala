@@ -1,20 +1,17 @@
 package com.gsk.kg.sparqlparser
 
 import cats.syntax.either._
-
 import org.apache.jena.graph.Node
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.{Query => JenaQuery}
 import org.apache.jena.sparql.algebra.Algebra
 import org.apache.jena.sparql.core.{Quad => JenaQuad}
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
 import com.gsk.kg.sparqlparser.EngineError.ParsingError
 import com.gsk.kg.sparqlparser.Expr._
 import com.gsk.kg.sparqlparser.Query._
 import com.gsk.kg.sparqlparser.StringVal._
-
 import scala.collection.JavaConverters._
 
 object QueryConstruct {

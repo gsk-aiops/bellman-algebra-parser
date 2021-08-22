@@ -2,7 +2,6 @@ package com.gsk.kg.engine
 package compiler
 
 import com.gsk.kg.engine.syntax._
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

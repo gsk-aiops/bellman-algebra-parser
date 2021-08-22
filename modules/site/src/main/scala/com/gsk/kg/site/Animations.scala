@@ -2,23 +2,17 @@ package com.gsk.kg.site
 
 import cats.implicits._
 import cats.syntax.either._
-
 import higherkindness.droste.data._
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.DAG._
 import com.gsk.kg.engine._
 import com.gsk.kg.engine.data._
 import com.gsk.kg.engine.optimizer._
-import com.gsk.kg.engine.optimizer._
 import com.gsk.kg.site.contrib.reftree.prelude._
 import com.gsk.kg.sparqlparser._
-
 import java.nio.file.Paths
-
 import scala.concurrent.duration._
-
 import reftree.contrib.SimplifiedInstances._
 import reftree.diagram.Animation
 import reftree.diagram.Diagram
@@ -26,7 +20,8 @@ import reftree.render.AnimationOptions
 import reftree.render.Renderer
 import reftree.render.RenderingOptions
 
-/** This object generates all the diagrams and animations we have in our documentation.
+/** This object generates all the diagrams and animations we have in our
+  * documentation.
   */
 object Animations extends App {
 

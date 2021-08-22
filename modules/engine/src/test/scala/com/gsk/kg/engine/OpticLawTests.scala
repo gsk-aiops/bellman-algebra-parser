@@ -2,11 +2,9 @@ package com.gsk.kg.engine
 
 import higherkindness.droste.data.Fix
 import higherkindness.droste.prelude._
-
 import com.gsk.kg.engine.DAG._
 import com.gsk.kg.engine.scalacheck.DAGArbitraries
 import com.gsk.kg.engine.scalacheck.DrosteImplicits
-
 import monocle.law.discipline.IsoTests
 import monocle.law.discipline.PrismTests
 import org.scalacheck.Arbitrary

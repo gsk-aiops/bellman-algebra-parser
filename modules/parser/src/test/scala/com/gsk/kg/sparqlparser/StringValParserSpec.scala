@@ -1,7 +1,6 @@
 package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.StringVal._
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

@@ -7,9 +7,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.functions.substring
 import org.apache.spark.sql.functions.substring_index
 import org.apache.spark.sql.functions.to_timestamp
-
 import com.gsk.kg.sparqlparser.TestConfig
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

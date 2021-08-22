@@ -1,12 +1,9 @@
 package com.gsk.kg.engine.properties
 
 import cats.syntax.either._
-
 import org.apache.spark.sql.Row
-
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

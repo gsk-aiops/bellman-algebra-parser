@@ -1,7 +1,6 @@
 package com.gsk.kg.engine.compiler
 
 import org.apache.spark.SparkConf
-
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.Suite
 

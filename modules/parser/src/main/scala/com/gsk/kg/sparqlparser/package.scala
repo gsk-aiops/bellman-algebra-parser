@@ -1,9 +1,7 @@
 package com.gsk.kg
 
 import cats.syntax.either._
-
 import com.gsk.kg.sparqlparser.EngineError.ParsingError
-
 import fastparse.Parsed
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success

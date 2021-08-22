@@ -3,13 +3,10 @@ package scalacheck
 
 import cats.Show
 import cats.implicits._
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-
 import java.net.URI
 import java.{util => ju}
-
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
@@ -162,10 +159,10 @@ trait DataFrameArbitraries {
       )
   }
 
-  /** Generate valid **very random** DataFrames representing N-Triples
-    * files.
+  /** Generate valid **very random** DataFrames representing N-Triples files.
     *
-    * @param sc an implicit [[SQLContext]] is required to convert to [[DataFrame]]
+    * @param sc
+    *   an implicit [[SQLContext]] is required to convert to [[DataFrame]]
     * @return
     */
   implicit def dataFrameGenerator(implicit

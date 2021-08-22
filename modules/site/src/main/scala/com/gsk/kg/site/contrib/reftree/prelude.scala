@@ -3,17 +3,14 @@ package com.gsk.kg.site.contrib.reftree
 import cats.Traverse
 import cats.data.State
 import cats.implicits._
-
 import higherkindness.droste._
 import higherkindness.droste.data.Fix
-
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.sparqlparser.ConditionOrder
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr
-
 import reftree.contrib.SimplifiedInstances._
 import reftree.core._
 

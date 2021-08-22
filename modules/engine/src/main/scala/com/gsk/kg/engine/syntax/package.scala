@@ -2,7 +2,6 @@ package com.gsk.kg.engine
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.sparqlparser.EngineError
 

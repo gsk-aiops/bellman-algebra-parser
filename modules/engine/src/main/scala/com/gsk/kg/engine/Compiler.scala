@@ -3,12 +3,9 @@ package com.gsk.kg.engine
 import cats.data.Kleisli
 import cats.implicits._
 import cats.syntax.either._
-
 import higherkindness.droste.Basis
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.analyzer.Analyzer
@@ -74,8 +71,7 @@ object Compiler {
       } yield dag
     }
 
-  /** The engine phase receives a query and applies it to the given
-    * dataframe
+  /** The engine phase receives a query and applies it to the given dataframe
     *
     * @param df
     * @param sc

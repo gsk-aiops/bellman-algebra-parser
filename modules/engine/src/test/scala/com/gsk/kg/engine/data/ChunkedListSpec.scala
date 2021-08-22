@@ -1,9 +1,7 @@
 package com.gsk.kg.engine.data
 
 import cats.implicits._
-
 import com.gsk.kg.engine.scalacheck.ChunkedListArbitraries
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

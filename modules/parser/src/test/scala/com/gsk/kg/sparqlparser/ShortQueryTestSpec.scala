@@ -1,10 +1,8 @@
 package com.gsk.kg.sparqlparser
 
 import cats.syntax.either._
-
 import com.gsk.kg.sparqlparser.Expr._
 import com.gsk.kg.sparqlparser.StringVal._
-
 import org.scalatest.flatspec.AnyFlatSpec
 
 class ShortQueryTestSpec extends AnyFlatSpec with TestUtils with TestConfig {

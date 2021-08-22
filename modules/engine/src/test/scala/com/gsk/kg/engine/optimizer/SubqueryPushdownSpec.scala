@@ -1,9 +1,7 @@
 package com.gsk.kg.engine.optimizer
 
 import cats.syntax.either._
-
 import higherkindness.droste.data.Fix
-
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.engine.DAG.Construct
 import com.gsk.kg.engine.DAG.Join
@@ -14,7 +12,6 @@ import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
 import com.gsk.kg.sparqlparser.TestConfig
 import com.gsk.kg.sparqlparser.TestUtils
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

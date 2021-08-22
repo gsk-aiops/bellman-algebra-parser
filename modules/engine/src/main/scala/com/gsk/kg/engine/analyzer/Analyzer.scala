@@ -5,11 +5,8 @@ import cats.Foldable
 import cats.data.Validated._
 import cats.data.ValidatedNec
 import cats.implicits._
-
 import higherkindness.droste.Basis
-
 import org.apache.spark.sql.DataFrame
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
@@ -19,8 +16,8 @@ object Analyzer {
   def rules[T: Basis[DAG, *]]: List[Rule[T]] =
     List(FindUnboundVariables[T])
 
-  /** Execute all rules in [[Analyzer.rules]] and accumulate errors
-    * that they may throw.
+  /** Execute all rules in [[Analyzer.rules]] and accumulate errors that they
+    * may throw.
     *
     * In case no errors are returned, the
     *

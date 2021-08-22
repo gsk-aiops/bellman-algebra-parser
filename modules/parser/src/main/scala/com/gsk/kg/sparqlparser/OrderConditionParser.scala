@@ -2,7 +2,6 @@ package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
-
 import fastparse.MultiLineWhitespace._
 import fastparse._
 

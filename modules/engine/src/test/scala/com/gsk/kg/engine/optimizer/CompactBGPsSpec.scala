@@ -3,9 +3,7 @@ package optimizer
 
 import cats.Traverse
 import cats.syntax.either._
-
 import higherkindness.droste.data.Fix
-
 import com.gsk.kg.engine.DAG.BGP
 import com.gsk.kg.engine.DAG.Project
 import com.gsk.kg.engine.data.ChunkedList
@@ -13,7 +11,6 @@ import com.gsk.kg.engine.optics._
 import com.gsk.kg.sparqlparser.Expr.Quad
 import com.gsk.kg.sparqlparser.TestConfig
 import com.gsk.kg.sparqlparser.TestUtils
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

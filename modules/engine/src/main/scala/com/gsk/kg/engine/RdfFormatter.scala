@@ -4,14 +4,13 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
-
 import com.gsk.kg.config.Config
 
 object RdfFormatter {
 
-  /** This function reformats a dataframe as per RDF standards.  In
-    * the [[formatField]] helper function we apply some heuristics to
-    * identify the kind of RDF node we should format to.
+  /** This function reformats a dataframe as per RDF standards. In the
+    * [[formatField]] helper function we apply some heuristics to identify the
+    * kind of RDF node we should format to.
     *
     * @param df
     * @return

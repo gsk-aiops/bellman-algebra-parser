@@ -1,54 +1,46 @@
 package com.gsk.kg.engine.functions
 
 import cats.kernel.Monoid
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.functions.lit
-
 import com.gsk.kg.engine.functions.Literals.nullLiteral
-
 import scala.annotation.tailrec
 
 object PathFrame {
 
   // scalastyle: off
-  /** PathFrame is an alias for a dataframe which contains paths of different lengths. E.g:
+  /** PathFrame is an alias for a dataframe which contains paths of different
+    * lengths. E.g:
     *
     * For this DataFrame which contains SPO triples (path of 1 length):
-    * +----------------------------+---------------------------------+----------------------------+
-    * |s                           |p                                |o                           |
-    * +----------------------------+---------------------------------+----------------------------+
-    * |<http://example.org/Alice>  |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Bob>    |
-    * |<http://example.org/Bob>    |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Charles>|
-    * |<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |
-    * |<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |
-    * +----------------------------+---------------------------------+----------------------------+
+    * | s                            | p                                 | o                            |
+    * |:-----------------------------|:----------------------------------|:-----------------------------|
+    * | <http://example.org/Alice>   | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Bob>     |
+    * | <http://example.org/Bob>     | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Charles> |
+    * | <http://example.org/Charles> | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Daniel>  |
+    * | <http://example.org/Daniel>  | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Erick>   |
     *
     * The counterpart PathFrame would be:
-    * +----------------------------+---------------------------------+----------------------------+
-    * |1                           |2                                |3                           |
-    * +----------------------------+---------------------------------+----------------------------+
-    * |<http://example.org/Alice>  |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Bob>    |
-    * |<http://example.org/Bob>    |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Charles>|
-    * |<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |
-    * |<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |
-    * +----------------------------+---------------------------------+----------------------------+
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
-    * |4                                |5                           |6                                |7                          |
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel>|
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick> |
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |null                             |null                       |
-    * |null                             |null                        |null                             |null                       |
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
+    * | 1                                 | 2                                 | 3                                 |                             |
+    * |:----------------------------------|:----------------------------------|:----------------------------------|:----------------------------|
+    * | <http://example.org/Alice>        | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Bob>          |                             |
+    * | <http://example.org/Bob>          | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Charles>      |                             |
+    * | <http://example.org/Charles>      | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Daniel>       |                             |
+    * | <http://example.org/Daniel>       | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Erick>        |                             |
+    * | 4                                 | 5                                 | 6                                 | 7                           |
+    * | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Charles>      | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Daniel> |
+    * | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Daniel>       | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Erick>  |
+    * | <http://xmlns.org/foaf/0.1/knows> | <http://example.org/Erick>        | null                              | null                        |
+    * | null                              | null                              | null                              | null                        |
     *
-    * Where the graph that forms the initial DataFrame has been traversed and generated a new DataFrame that contains
-    * the paths of the graph. Taking a look at this PathFrame we can see that it contains next path lengths:
-    * - 1 length: triples from columns 1 to 3.
-    * - 2 length: triples from columns 1 to 5.
-    * - 3 length: triples from columns 1 to 7.
+    * Where the graph that forms the initial DataFrame has been traversed and
+    * generated a new DataFrame that contains the paths of the graph. Taking a
+    * look at this PathFrame we can see that it contains next path lengths:
+    *   - 1 length: triples from columns 1 to 3.
+    *   - 2 length: triples from columns 1 to 5.
+    *   - 3 length: triples from columns 1 to 7.
     */
   // scalastyle: on
   type PathFrame = DataFrame
@@ -57,16 +49,24 @@ object PathFrame {
   val PIdx = 2
   val OIdx = 3
 
-  /** It receives a base dataframe with all triples of the graph and creates a new dataframe which will contain all
-    * existing paths. This is done by iterating and accumulating results for every new depth level until there are no
-    * more triples to connect.
-    * @param baseDf Base dataframe with all the triples unconnected
-    * @param accDf The dataframe which it will accumulate every depth level of paths
-    * @param i Iteration index
-    * @param sIdx Subject index (for column renaming)
-    * @param pIdx Predicate index (for column renaming)
-    * @param oIdx Object index (for column renaming
-    * @return Dataframe with all the triples connected creating paths
+  /** It receives a base dataframe with all triples of the graph and creates a
+    * new dataframe which will contain all existing paths. This is done by
+    * iterating and accumulating results for every new depth level until there
+    * are no more triples to connect.
+    * @param baseDf
+    *   Base dataframe with all the triples unconnected
+    * @param accDf
+    *   The dataframe which it will accumulate every depth level of paths
+    * @param i
+    *   Iteration index
+    * @param sIdx
+    *   Subject index (for column renaming)
+    * @param pIdx
+    *   Predicate index (for column renaming)
+    * @param oIdx
+    *   Object index (for column renaming
+    * @return
+    *   Dataframe with all the triples connected creating paths
     */
   def constructPathFrame(
       oneLengthPaths: DataFrame,
@@ -124,8 +124,8 @@ object PathFrame {
       .withColumnRenamed("o", s"$OIdx")
   }
 
-  /** It returns a dataframe with all the vertex that points to itselft (0 length path), the predicate column will
-    * contain null values.
+  /** It returns a dataframe with all the vertex that points to itselft (0
+    * length path), the predicate column will contain null values.
     * @param df
     * @return
     */
@@ -170,8 +170,9 @@ object PathFrame {
     }
   }
 
-  /** It merges two dataframes by adding rows from the right dataframe to the second and setting to null those columns
-    * that are not present in the right one.
+  /** It merges two dataframes by adding rows from the right dataframe to the
+    * second and setting to null those columns that are not present in the right
+    * one.
     * @param df1
     * @param df2
     * @return

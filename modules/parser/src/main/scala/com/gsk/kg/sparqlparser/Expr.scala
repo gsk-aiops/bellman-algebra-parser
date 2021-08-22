@@ -1,12 +1,9 @@
 package com.gsk.kg.sparqlparser
 
 import cats.implicits._
-
 import higherkindness.droste.macros.deriveFixedPoint
-
 import org.apache.jena.graph.Node
 import org.apache.jena.sparql.core.{Quad => JenaQuad}
-
 import com.gsk.kg.sparqlparser.StringVal.BLANK
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.STRING

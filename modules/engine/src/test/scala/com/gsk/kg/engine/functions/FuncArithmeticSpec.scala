@@ -1,10 +1,8 @@
 package com.gsk.kg.engine.functions
 
 import org.apache.spark.sql.functions.col
-
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -789,7 +787,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -812,7 +810,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -847,7 +845,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -882,7 +880,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -917,7 +915,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -964,7 +962,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -1011,7 +1009,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()

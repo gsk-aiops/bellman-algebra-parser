@@ -3,9 +3,7 @@ package scalacheck
 
 import cats.data.Chain
 import cats.data._
-
 import com.gsk.kg.engine.data.ChunkedList
-
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 

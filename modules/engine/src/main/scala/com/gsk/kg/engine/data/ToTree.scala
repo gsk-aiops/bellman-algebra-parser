@@ -5,23 +5,20 @@ import cats.Show
 import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
 import cats.implicits._
-
 import higherkindness.droste.Algebra
 import higherkindness.droste.Basis
 import higherkindness.droste.scheme
-
 import com.gsk.kg.sparqlparser.ConditionOrder
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr
 import com.gsk.kg.sparqlparser.Expression
 import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
-
 import scala.collection.immutable.Nil
 
-/** Typeclass that allows you converting values of type T to
-  * [[TreeRep]].  The benefit of doing so is that we'll be able to
-  * render them nicely wit the drawTree method.
+/** Typeclass that allows you converting values of type T to [[TreeRep]]. The
+  * benefit of doing so is that we'll be able to render them nicely wit the
+  * drawTree method.
   */
 trait ToTree[T] {
   def toTree(t: T): TreeRep[String]
@@ -153,7 +150,7 @@ object ToTree extends LowPriorityToTreeInstances0 {
           case ExpressionF.OR(l, r)       => Node("OR", Stream(l, r))
           case ExpressionF.AND(l, r)      => Node("AND", Stream(l, r))
           case ExpressionF.NEGATE(s)      => Node("NEGATE", Stream(s))
-          case ExpressionF.IN(e, xs)      => Node("IN", Stream(e) #::: xs.toStream)
+          case ExpressionF.IN(e, xs) => Node("IN", Stream(e) #::: xs.toStream)
           case ExpressionF.SAMETERM(l, r) => Node("SAMETERM", Stream(l, r))
           case ExpressionF.IF(cnd, ifTrue, ifFalse) =>
             Node("IF", Stream(cnd, ifTrue, ifFalse))
