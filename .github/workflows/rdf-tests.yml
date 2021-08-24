@@ -45,7 +45,7 @@ jobs:
       - name: Create Pull Request
         if: env.NO_CHANGES == null
         id: cpr
-        uses: peter-evans/create-pull-request@v3.10.0
+        uses: peter-evans/create-pull-request@v3.10.1
         with:
           token: ${{ secrets.ADMIN_GITHUB_TOKEN }}
           commit-message: Update report
