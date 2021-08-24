@@ -4,16 +4,15 @@ import cats.kernel.Monoid
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions._
 
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 object PathFrame {
 
-  // scalastyle: off
   /** PathFrame is an alias for a dataframe which contains paths of different lengths. E.g:
     *
     * For this DataFrame which contains SPO triples (path of 1 length):
@@ -35,14 +34,22 @@ object PathFrame {
     * |<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |
     * |<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |
     * +----------------------------+---------------------------------+----------------------------+
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
-    * |4                                |5                           |6                                |7                          |
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel>|
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick> |
-    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |null                             |null                       |
-    * |null                             |null                        |null                             |null                       |
-    * +---------------------------------+----------------------------+---------------------------------+---------------------------+
+    * +---------------------------------+----------------------------+---------------------------------+
+    * |4                                |5                           |6                                |
+    * +---------------------------------+----------------------------+---------------------------------+
+    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Charles>|<http://xmlns.org/foaf/0.1/knows>|
+    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Daniel> |<http://xmlns.org/foaf/0.1/knows>|
+    * |<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick>  |null                             |
+    * |null                             |null                        |null                             |
+    * +---------------------------------+----------------------------+---------------------------------+
+    * +---------------------------+---------------------------------+---------------------------+
+    * |7                          |8                                |9                          |
+    * +---------------------------+---------------------------------+---------------------------+
+    * |<http://example.org/Daniel>|<http://xmlns.org/foaf/0.1/knows>|<http://example.org/Erick> |
+    * |<http://example.org/Erick> |<http://xmlns.org/foaf/0.1/knows>|null                       |
+    * |null                       |null                             |null                       |
+    * |null                       |null                             |null                       |
+    * +---------------------------+---------------------------------+---------------------------+
     *
     * Where the graph that forms the initial DataFrame has been traversed and generated a new DataFrame that contains
     * the paths of the graph. Taking a look at this PathFrame we can see that it contains next path lengths:
@@ -50,7 +57,7 @@ object PathFrame {
     * - 2 length: triples from columns 1 to 5.
     * - 3 length: triples from columns 1 to 7.
     */
-  // scalastyle: on
+
   type PathFrame = DataFrame
 
   val SIdx = 1
@@ -59,27 +66,22 @@ object PathFrame {
 
   /** It receives a base dataframe with all triples of the graph and creates a new dataframe which will contain all
     * existing paths. This is done by iterating and accumulating results for every new depth level until there are no
-    * more triples to connect.
-    * @param baseDf Base dataframe with all the triples unconnected
-    * @param accDf The dataframe which it will accumulate every depth level of paths
-    * @param i Iteration index
-    * @param sIdx Subject index (for column renaming)
-    * @param pIdx Predicate index (for column renaming)
-    * @param oIdx Object index (for column renaming
+    * more triples to connect or it reaches some limit.
+    * @param initial Base dataframe with all the one length paths
+    * @param limit If some it will set a limit to iterate while constructing the PathFrame
     * @return Dataframe with all the triples connected creating paths
     */
   def constructPathFrame(
-      oneLengthPaths: DataFrame,
-      accPaths: DataFrame,
+      initial: DataFrame,
       limit: Option[Int]
   ): (Int, PathFrame) = {
 
     @tailrec
     def step(
-        oneLengthPaths: DataFrame,
-        accPaths: DataFrame,
+        oneLengthPaths: PathFrame,
+        accPaths: PathFrame,
         i: Int
-    ): (Int, DataFrame) = {
+    ): (Int, PathFrame) = {
 
       lazy val stepSlice: Int => Int = x => x + (2 * i)
 
@@ -113,10 +115,14 @@ object PathFrame {
     }
 
     val i = 1
-    step(oneLengthPaths, accPaths, i)
+    step(initial, initial, i)
   }
 
-  def getOneLengthPaths(df: DataFrame): DataFrame = {
+  /** This function will return a PathFrame containing the path 0 length for a given dataframe.
+    * @param df
+    * @return
+    */
+  def getOneLengthPaths(df: DataFrame): PathFrame = {
     df
       .drop("g")
       .withColumnRenamed("s", s"$SIdx")
@@ -124,12 +130,12 @@ object PathFrame {
       .withColumnRenamed("o", s"$OIdx")
   }
 
-  /** It returns a dataframe with all the vertex that points to itselft (0 length path), the predicate column will
-    * contain null values.
+  /** This function a PathFrame with all the vertex that points to itself (0 length path),
+    * the predicate column will contain null values.
     * @param df
     * @return
     */
-  def getZeroLengthPaths(df: DataFrame): DataFrame = {
+  def getZeroLengthPaths(df: DataFrame): PathFrame = {
     val sDf = df.select(df("s"))
     val oDf = df.select(df("o"))
 
@@ -142,15 +148,18 @@ object PathFrame {
       .withColumnRenamed("o", s"$OIdx")
   }
 
-  /** @param pathDf
-    * @param nPath
+  /** This function will return the n paths length triples from a given PathFrame.
+    * @param df Initial Dataframe (this is needed because for path 0 length we need to know all vertex, also the ones
+    *           not included in the PathFrame).
+    * @param pathFrame The PathFrame that contains all length paths.
+    * @param nPath The n length path that is wanted to be extracted.
     * @return
     */
   def getNLengthPathTriples(
       df: DataFrame,
-      pathDf: DataFrame,
+      pathFrame: PathFrame,
       nPath: Int
-  ): DataFrame = {
+  ): PathFrame = {
     if (nPath == 0) {
       getZeroLengthPaths(df)
     } else {
@@ -159,10 +168,10 @@ object PathFrame {
 
       val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString)
 
-      val nPaths = pathDf
+      val nPaths = pathFrame
         .select(cols.head, cols.tail: _*)
         .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
-          acc && pathDf(elem).isNotNull
+          acc && pathFrame(elem).isNotNull
         })
         .withColumnRenamed(s"$oSlice", s"$OIdx")
 
@@ -178,8 +187,8 @@ object PathFrame {
     */
   def merge(df1: DataFrame, df2: DataFrame): DataFrame = {
 
-    def getNewColumns(column: Set[String], merged_cols: Set[String]) = {
-      merged_cols.toList.map {
+    def getNewColumns(column: Set[String], mergedCols: Set[String]) = {
+      mergedCols.toList.map {
         case x if column.contains(x) => col(x)
         case x @ _                   => nullLiteral.as(x)
       }
@@ -194,11 +203,30 @@ object PathFrame {
     newDf1.unionByName(newDf2)
   }
 
-  def toSPO(pf: PathFrame): DataFrame = {
-    pf
-      .withColumnRenamed(s"$SIdx", "s")
-      .withColumnRenamed(s"$PIdx", "p")
-      .withColumnRenamed(s"$OIdx", "o")
+  /** It transforms a PathFrame into a Dataframe renaming columns to SPOG.
+    * @param pf Pathframe that is wanted to be converted.
+    * @return
+    */
+  def toSPOG(pf: PathFrame): DataFrame = {
+
+    def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
+
+    val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
+      case (accDf, (idx, name)) =>
+        if (hasColumn(accDf, idx.toString)) {
+          accDf.withColumnRenamed(idx.toString, name)
+        } else {
+          accDf.withColumn(name, nullLiteral)
+        }
+    }
+
+    // TODO: The graph column should be propagated across the PathFrame instead of added to default graph
+    // See: GSK issue AIPL-3665
+    if (hasColumn(df, "g")) {
+      df
+    } else {
+      df.withColumn("g", lit(""))
+    }
   }
 
   implicit def monoid(implicit

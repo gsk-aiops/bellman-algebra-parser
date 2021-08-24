@@ -270,29 +270,115 @@ class PropertyPathsSpec
         )
       }
 
-      "negated ! property path" ignore {
+      "negated ! property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/a>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Alice\""
+        "simple uri predicate" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "\"Charles\""
+            )
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s !(foaf:name) ?o .
-            |}
-            |""".stripMargin
+        "nested property path" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
 
-        result.right.get.collect.toSet shouldEqual Set()
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:name{2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            )
+          )
+        }
       }
 
       "fixed length {n,m} property path" in {
