@@ -124,7 +124,8 @@ object Engine {
         quads
           .mapChunks { chunk =>
             val condition = composedConditionFromChunk(df, chunk)
-            applyChunkToDf(chunk, condition, df)
+            val filtered  = df.filter(condition)
+            applyChunkToDf(chunk, filtered)
           }
           .foldLeft(Multiset.empty)((acc, other) => acc.union(other))
       }
@@ -133,13 +134,11 @@ object Engine {
 
   private def applyChunkToDf(
       chunk: ChunkedList.Chunk[Quad],
-      condition: Column,
-      df: DataFrame
+      filtered: DataFrame
   )(implicit
       sc: SQLContext
   ): Multiset = {
     import sc.implicits._
-    val current = df.filter(condition)
     val vars =
       chunk
         .map(_.getNamesAndPositions :+ (GRAPH_VARIABLE, "g"))
@@ -147,7 +146,7 @@ object Engine {
         .toList
         .flatten
     val selected =
-      current.select(vars.map(v => $"${v._2}".as(v._1.s)): _*)
+      filtered.select(vars.map(v => $"${v._2}".as(v._1.s)): _*)
 
     Multiset(
       vars.map {
@@ -213,27 +212,18 @@ object Engine {
           .apply(df)
           .map {
             case Right(accDf) =>
-              val vars = Quad(
-                s,
-                STRING(""),
-                o,
-                g
-              ).getNamesAndPositions :+ (GRAPH_VARIABLE, "g")
-
-              Multiset(
-                vars.map {
-                  case (GRAPH_VARIABLE, _) =>
-                    VARIABLE(GRAPH_VARIABLE.s)
-                  case (other, _) =>
-                    other.asInstanceOf[VARIABLE]
-                }.toSet,
-                accDf
+              val renamedDf = accDf
+              val chunk     = Chunk(Quad(s, STRING(""), o, List.empty))
+              val result    = applyChunkToDf(chunk, renamedDf)
+              result.copy(dataframe =
+                result.dataframe
                   .withColumnRenamed("s", s.s)
                   .withColumnRenamed("o", o.s)
               )
             case Left(cond) =>
-              val chunk = Chunk(Quad(s, STRING(""), o, g))
-              applyChunkToDf(chunk, cond, df)
+              val chunk    = Chunk(Quad(s, STRING(""), o, List.empty))
+              val filtered = df.filter(cond)
+              applyChunkToDf(chunk, filtered)
           }
       }
     }
@@ -246,7 +236,8 @@ object Engine {
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
-          applyChunkToDf(chunk, condition, df)
+          val filtered  = df.filter(condition)
+          applyChunkToDf(chunk, filtered)
         }
       )
     }

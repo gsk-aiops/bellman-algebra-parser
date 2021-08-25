@@ -49,7 +49,7 @@ object PropertyExpressionF {
             M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e))
           case BetweenZeroAndNF(n, e) =>
             M.liftF(FuncProperty.betweenNAndM(df, None, Some(n), e))
-          case UriF(s) => FuncProperty.uri(s).pure[M]
+          case UriF(s) => FuncProperty.uri(df, s).pure[M]
         }
 
       val eval = scheme.cataM[M, PropertyExpressionF, T, ColOrDf](algebraM)

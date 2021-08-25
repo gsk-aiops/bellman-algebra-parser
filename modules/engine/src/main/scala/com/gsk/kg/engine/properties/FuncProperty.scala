@@ -126,7 +126,7 @@ object FuncProperty {
     checkArgs.flatMap { case (effectiveN, effectiveM) =>
       val onePaths = getOneLengthPaths(e match {
         case Right(predDf) => predDf
-        case Left(predCol) => df.filter(predCol <=> df("p"))
+        case Left(predCol) => df.filter(predCol)
       })
 
       val (maxLength, pathsFrame) =
@@ -159,7 +159,7 @@ object FuncProperty {
             )
             .asLeft
         case Left(predCol) =>
-          (predCol =!= df("p")).asRight
+          not(predCol).asRight
       }
     }
 
@@ -175,7 +175,7 @@ object FuncProperty {
     }
   }
 
-  def uri(s: String): ColOrDf =
-    Left(lit(s))
+  def uri(df: DataFrame, s: String): ColOrDf =
+    (df("p") <=> lit(s)).asLeft
 
 }
