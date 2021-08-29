@@ -2,13 +2,10 @@ package com.gsk.kg.engine
 package optimizer
 
 import cats.syntax.either._
-
 import higherkindness.droste.data.Fix
-
 import com.gsk.kg.engine.DAG.Project
 import com.gsk.kg.sparqlparser.TestConfig
 import com.gsk.kg.sparqlparser.TestUtils
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

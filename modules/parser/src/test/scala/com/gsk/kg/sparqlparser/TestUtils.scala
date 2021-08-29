@@ -1,13 +1,10 @@
 package com.gsk.kg.sparqlparser
 
 import cats.syntax.either._
-
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.sparql.algebra.Algebra
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
-
 import scala.io.Source
 
 trait TestUtils {

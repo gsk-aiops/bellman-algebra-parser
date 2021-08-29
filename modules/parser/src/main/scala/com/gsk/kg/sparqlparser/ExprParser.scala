@@ -3,7 +3,6 @@ package com.gsk.kg.sparqlparser
 import com.gsk.kg.sparqlparser.Expr._
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-
 import fastparse.MultiLineWhitespace._
 import fastparse._
 

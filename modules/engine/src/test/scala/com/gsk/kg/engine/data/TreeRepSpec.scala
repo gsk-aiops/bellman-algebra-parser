@@ -3,10 +3,8 @@ package data
 
 import cats.instances.string._
 import cats.syntax.either._
-
 import com.gsk.kg.sparqlparser.TestConfig
 import com.gsk.kg.sparqlparser.TestUtils
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

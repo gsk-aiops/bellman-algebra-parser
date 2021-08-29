@@ -1,7 +1,6 @@
 package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.DateTimeFunc._
-
 import fastparse.MultiLineWhitespace._
 import fastparse._
 

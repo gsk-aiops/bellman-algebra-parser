@@ -1,28 +1,22 @@
 package com.gsk.kg.engine.functions
 
 import cats.data.NonEmptyList
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{concat => cc, _}
-
 import com.gsk.kg.engine.RdfFormatter
 import com.gsk.kg.engine.functions.FuncStrings.StringFuncUtils._
 import com.gsk.kg.engine.functions.Literals._
-
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.regex.Pattern
-
 import org.apache.commons.codec.binary.Hex
 
 object FuncStrings {
 
-  /** Implementation of SparQL STRLEN on Spark dataframes.
-    * Counts string number of characters
+  /** Implementation of SparQL STRLEN on Spark dataframes. Counts string number
+    * of characters
     *
-    * strlen("chat") -> 4
-    * strlen("chat"@en) -> 4
-    * strlen("chat"^^xsd:string) -> 4
+    * strlen("chat") -> 4 strlen("chat"@en) -> 4 strlen("chat"^^xsd:string) -> 4
     *
     * @param col
     * @return
@@ -43,7 +37,8 @@ object FuncStrings {
 
   /** Implementation of SparQL SUBSTR on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-substr]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-substr]]
     * @param col
     * @param pos
     * @param len
@@ -93,7 +88,8 @@ object FuncStrings {
 
   /** Implementation of SparQL UCASE on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-ucase]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-ucase]]
     * @param col
     * @return
     */
@@ -102,7 +98,8 @@ object FuncStrings {
 
   /** Implementation of SparQL LCASE on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-lcase]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-lcase]]
     * @param col
     * @return
     */
@@ -113,7 +110,8 @@ object FuncStrings {
     *
     * TODO (pepegar): Implement argument compatibility checks
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-strstarts]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-strstarts]]
     * @param col
     * @param str
     * @return
@@ -125,7 +123,8 @@ object FuncStrings {
     *
     * TODO (pepegar): Implement argument compatibility checks
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-strends]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-strends]]
     * @param col
     * @param str
     * @return
@@ -137,7 +136,8 @@ object FuncStrings {
     *
     * TODO (pepegar): Implement argument compatibility checks
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-strbefore]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-strbefore]]
     * @param col
     * @param str
     * @return
@@ -185,7 +185,8 @@ object FuncStrings {
     *
     * TODO (pepegar): Implement argument compatibility checks
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-strafter]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-strafter]]
     * @param col
     * @param str
     * @return
@@ -217,7 +218,8 @@ object FuncStrings {
 
   /** Implementation of SparQL ENCODE_FOR_URI on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-encode]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-encode]]
     * @param str
     * @return
     */
@@ -226,7 +228,8 @@ object FuncStrings {
 
   /** Implementation of SparQL ENCODE_FOR_URI on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-encode]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-encode]]
     * @param col
     * @return
     */
@@ -263,7 +266,8 @@ object FuncStrings {
 
   /** Implementation of SparQL LANGMATCHES on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-langMatches]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-langMatches]]
     * @param col
     * @return
     */
@@ -287,7 +291,8 @@ object FuncStrings {
 
   /** Implementation of SparQL REGEX on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-regex]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-regex]]
     * @param col
     * @param pattern
     * @param flags
@@ -312,8 +317,10 @@ object FuncStrings {
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
     *
-    * @see https://www.w3.org/TR/sparql11-query/#func-replace
-    * @see https://www.w3.org/TR/xpath-functions/#func-replace
+    * @see
+    *   https://www.w3.org/TR/sparql11-query/#func-replace
+    * @see
+    *   https://www.w3.org/TR/xpath-functions/#func-replace
     * @param col
     * @param pattern
     * @param by

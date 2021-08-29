@@ -2,14 +2,11 @@ package com.gsk.kg.engine.compiler
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
-
 import com.gsk.kg.engine.Compiler
 import com.gsk.kg.engine.RdfFormatter
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.TestConfig
-
 import java.io.ByteArrayOutputStream
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -133,8 +130,8 @@ class CompilerSpec
       outCapture.toString shouldEqual expectedOut
     }
 
-    /** TODO(pepegar): In order to make this test pass we need the
-      * results to be RDF compliant (mainly, wrapping values correctly)
+    /** TODO(pepegar): In order to make this test pass we need the results to be
+      * RDF compliant (mainly, wrapping values correctly)
       */
     "query a real DF with a real query" ignore {
       val query =

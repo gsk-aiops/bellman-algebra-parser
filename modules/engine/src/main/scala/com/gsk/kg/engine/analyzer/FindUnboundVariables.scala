@@ -3,9 +3,7 @@ package analyzer
 
 import cats.implicits._
 import cats.{Group => _, _}
-
 import higherkindness.droste.{Project => _, _}
-
 import com.gsk.kg.engine.DAG._
 import com.gsk.kg.engine.ExpressionF._
 import com.gsk.kg.engine.data.ChunkedList
@@ -16,11 +14,10 @@ import com.gsk.kg.sparqlparser.StringVal.VARIABLE
 /** This rule performs a bottom-up traverse of the DAG (with a
   * [[higherkindness.droste.Algebra]]), carrying the bound and unbound vars
   *
-  * When arriving to the nodes that may use unbound variables
-  * ([[DAG.Project]] and [[DAG.Construct]]), it compares the variables
-  * used in that node with those that were declared beforehand in the
-  * graph.  If there are any that are used but not declared, they're
-  * returned and later on reported.
+  * When arriving to the nodes that may use unbound variables ([[DAG.Project]]
+  * and [[DAG.Construct]]), it compares the variables used in that node with
+  * those that were declared beforehand in the graph. If there are any that are
+  * used but not declared, they're returned and later on reported.
   */
 object FindUnboundVariables {
 
@@ -53,10 +50,10 @@ object FindUnboundVariables {
       case Describe(values, (declared, unbound)) =>
         val vars: Set[VARIABLE] =
           values
-            .filter({
+            .filter {
               case VARIABLE(_) => true
               case _           => false
-            })
+            }
             .map(variable => variable.asInstanceOf[VARIABLE])
             .toSet
 
@@ -159,61 +156,61 @@ object FindVariablesOnExpression {
         case REPLACE(st, pattern, by, flags) => st
         case STRENDS(s, f)                   => s
         case STRSTARTS(s, f)                 => s
-        case CONCAT(appendTo, append)        => appendTo ++ append.toList.toSet.flatten
-        case STR(s)                          => s
-        case STRAFTER(s, f)                  => s
-        case STRBEFORE(s, f)                 => s
-        case STRDT(s, uri)                   => s
-        case STRLANG(s, tag)                 => s
-        case SUBSTR(s, pos, len)             => s
-        case STRLEN(s)                       => s
-        case ISBLANK(s)                      => s
-        case ISNUMERIC(s)                    => s
-        case COUNT(e)                        => e
-        case SUM(e)                          => e
-        case MIN(e)                          => e
-        case MAX(e)                          => e
-        case AVG(e)                          => e
-        case SAMPLE(e)                       => e
-        case DATATYPE(e)                     => e
-        case LANG(e)                         => e
-        case LANGMATCHES(e, range)           => e
-        case LCASE(e)                        => e
-        case UCASE(e)                        => e
-        case ISLITERAL(e)                    => e
-        case GROUP_CONCAT(e, separator)      => e
-        case ENCODE_FOR_URI(s)               => s
-        case MD5(s)                          => s
-        case SHA1(s)                         => s
-        case SHA256(s)                       => s
-        case SHA384(s)                       => s
-        case SHA512(s)                       => s
-        case STRING(s)                       => Set.empty[VARIABLE]
-        case DT_STRING(s, tag)               => Set.empty[VARIABLE]
-        case LANG_STRING(s, tag)             => Set.empty[VARIABLE]
-        case NUM(s)                          => Set.empty[VARIABLE]
-        case ExpressionF.VARIABLE(s)         => Set(VARIABLE(s))
-        case URIVAL(s)                       => Set.empty[VARIABLE]
-        case BLANK(s)                        => Set.empty[VARIABLE]
-        case BOOL(s)                         => Set.empty[VARIABLE]
-        case ASC(e)                          => e
-        case DESC(e)                         => e
-        case UUID()                          => Set.empty[VARIABLE]
-        case CEIL(e)                         => e
-        case ROUND(e)                        => e
-        case RAND()                          => Set.empty[VARIABLE]
-        case ABS(e)                          => e
-        case FLOOR(e)                        => e
-        case STRUUID()                       => Set.empty[VARIABLE]
-        case NOW()                           => Set.empty[VARIABLE]
-        case YEAR(s)                         => s
-        case MONTH(s)                        => s
-        case DAY(s)                          => s
-        case HOUR(s)                         => s
-        case MINUTES(s)                      => s
-        case SECONDS(s)                      => s
-        case TIMEZONE(s)                     => s
-        case TZ(s)                           => s
+        case CONCAT(appendTo, append) => appendTo ++ append.toList.toSet.flatten
+        case STR(s)                   => s
+        case STRAFTER(s, f)           => s
+        case STRBEFORE(s, f)          => s
+        case STRDT(s, uri)            => s
+        case STRLANG(s, tag)          => s
+        case SUBSTR(s, pos, len)      => s
+        case STRLEN(s)                => s
+        case ISBLANK(s)               => s
+        case ISNUMERIC(s)             => s
+        case COUNT(e)                 => e
+        case SUM(e)                   => e
+        case MIN(e)                   => e
+        case MAX(e)                   => e
+        case AVG(e)                   => e
+        case SAMPLE(e)                => e
+        case DATATYPE(e)              => e
+        case LANG(e)                  => e
+        case LANGMATCHES(e, range)    => e
+        case LCASE(e)                 => e
+        case UCASE(e)                 => e
+        case ISLITERAL(e)             => e
+        case GROUP_CONCAT(e, separator) => e
+        case ENCODE_FOR_URI(s)          => s
+        case MD5(s)                     => s
+        case SHA1(s)                    => s
+        case SHA256(s)                  => s
+        case SHA384(s)                  => s
+        case SHA512(s)                  => s
+        case STRING(s)                  => Set.empty[VARIABLE]
+        case DT_STRING(s, tag)          => Set.empty[VARIABLE]
+        case LANG_STRING(s, tag)        => Set.empty[VARIABLE]
+        case NUM(s)                     => Set.empty[VARIABLE]
+        case ExpressionF.VARIABLE(s)    => Set(VARIABLE(s))
+        case URIVAL(s)                  => Set.empty[VARIABLE]
+        case BLANK(s)                   => Set.empty[VARIABLE]
+        case BOOL(s)                    => Set.empty[VARIABLE]
+        case ASC(e)                     => e
+        case DESC(e)                    => e
+        case UUID()                     => Set.empty[VARIABLE]
+        case CEIL(e)                    => e
+        case ROUND(e)                   => e
+        case RAND()                     => Set.empty[VARIABLE]
+        case ABS(e)                     => e
+        case FLOOR(e)                   => e
+        case STRUUID()                  => Set.empty[VARIABLE]
+        case NOW()                      => Set.empty[VARIABLE]
+        case YEAR(s)                    => s
+        case MONTH(s)                   => s
+        case DAY(s)                     => s
+        case HOUR(s)                    => s
+        case MINUTES(s)                 => s
+        case SECONDS(s)                 => s
+        case TIMEZONE(s)                => s
+        case TZ(s)                      => s
       }
 
     val eval =

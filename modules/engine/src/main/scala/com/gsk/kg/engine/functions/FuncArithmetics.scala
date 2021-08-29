@@ -1,7 +1,6 @@
 package com.gsk.kg.engine.functions
 
 import org.apache.spark.sql.Column
-
 import com.gsk.kg.engine.functions.Literals._
 
 object FuncArithmetics {

@@ -3,7 +3,6 @@ package scalacheck
 
 import java.net.URI
 import java.time.LocalDateTime
-
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
@@ -46,7 +45,7 @@ trait CommonGenerators {
         n,
         Gen.zip(nonEmptyStringGenerator, nonEmptyStringGenerator)
       )
-    } yield paths.map({ case (k, v) => s"$k=$v" }).mkString("&")
+    } yield paths.map { case (k, v) => s"$k=$v" }.mkString("&")
 
   val sparqlDataTypesGen: Gen[String] = Gen.oneOf(
     "xsd:string",
@@ -75,7 +74,7 @@ trait CommonGenerators {
     for {
       dataType <- sparqlDataTypesGen
       lit      <- Gen.alphaNumStr
-    } yield s""""${lit}"^^$dataType"""
+    } yield s""""$lit"^^$dataType"""
 
   def smallListOf[A](a: Gen[A]): Gen[List[A]] =
     Gen.choose(0, 5).flatMap(n => Gen.listOfN(n, a))

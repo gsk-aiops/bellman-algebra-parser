@@ -3,7 +3,6 @@ package engine
 
 import com.gsk.kg.engine.QueryExtractor.QueryParam
 import com.gsk.kg.sparqlparser.QueryConstruct
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -134,7 +133,7 @@ WHERE {
     }
 
     "work correctly when more than one FROM statement appears" in {
-      val query  = """
+      val query = """
         | PREFIX  dm:   <http://gsk-kg.rdip.gsk.com/dm/1.0/>
         | CONSTRUCT {
         |   ?te dm:contains ?docid .

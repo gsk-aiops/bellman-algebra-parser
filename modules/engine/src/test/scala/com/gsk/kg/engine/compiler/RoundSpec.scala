@@ -2,9 +2,7 @@ package com.gsk.kg.engine.compiler
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
-
 import com.gsk.kg.sparqlparser.TestConfig
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

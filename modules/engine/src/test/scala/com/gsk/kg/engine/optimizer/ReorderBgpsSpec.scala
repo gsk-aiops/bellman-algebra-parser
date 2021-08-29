@@ -2,9 +2,7 @@ package com.gsk.kg.engine
 package optimizer
 
 import cats.implicits._
-
 import higherkindness.droste.Basis
-
 import com.gsk.kg.engine.DAG.BGP
 import com.gsk.kg.engine.DAG.Project
 import com.gsk.kg.engine.data.ChunkedList
@@ -15,7 +13,6 @@ import com.gsk.kg.engine.scalacheck.DrosteImplicits
 import com.gsk.kg.sparql.syntax.all._
 import com.gsk.kg.sparqlparser.Expr
 import com.gsk.kg.sparqlparser.StringVal
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

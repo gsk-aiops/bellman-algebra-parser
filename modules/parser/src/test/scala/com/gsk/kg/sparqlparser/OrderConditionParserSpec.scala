@@ -5,7 +5,6 @@ import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Conditional.OR
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-
 import org.scalatest.wordspec.AnyWordSpec
 
 class OrderConditionParserSpec extends AnyWordSpec {

@@ -2,7 +2,6 @@ package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.BuiltInFunc._
 import com.gsk.kg.sparqlparser.StringVal._
-
 import org.scalatest.flatspec.AnyFlatSpec
 
 class BuiltInFuncParserSpec extends AnyFlatSpec {

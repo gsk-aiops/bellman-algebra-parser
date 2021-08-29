@@ -1,13 +1,10 @@
 package com.gsk.kg.sparqlparser
 
 import cats.syntax.either._
-
 import com.gsk.kg.sparqlparser.Expr._
 import com.gsk.kg.sparqlparser.Query._
 import com.gsk.kg.sparqlparser.StringVal._
-
 import scala.collection.mutable
-
 import org.scalatest.flatspec.AnyFlatSpec
 
 class QueryConstructSpec extends AnyFlatSpec with TestUtils with TestConfig {

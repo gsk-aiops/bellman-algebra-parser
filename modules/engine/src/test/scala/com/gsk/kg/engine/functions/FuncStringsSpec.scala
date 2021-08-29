@@ -1,13 +1,10 @@
 package com.gsk.kg.engine.functions
 
 import cats.syntax.list._
-
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.lit
-
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks

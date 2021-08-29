@@ -1,13 +1,10 @@
 package com.gsk.kg.engine
 
 import cats.implicits._
-
 import higherkindness.droste._
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.properties.FuncProperty
 import com.gsk.kg.sparqlparser.EngineError

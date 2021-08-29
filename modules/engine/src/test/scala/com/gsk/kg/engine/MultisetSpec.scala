@@ -5,7 +5,6 @@ import com.gsk.kg.engine.utils.MultisetMatchers
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-
 import org.scalatest.wordspec.AnyWordSpec
 
 class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {

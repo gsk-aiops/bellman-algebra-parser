@@ -1,7 +1,6 @@
 package com.gsk.kg.sparql.syntax
 
 import cats.syntax.either._
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.sparqlparser.Query
 import com.gsk.kg.sparqlparser.QueryConstruct
@@ -10,8 +9,9 @@ trait Interpolators {
 
   implicit class SparqlQueryInterpolator(sc: StringContext) {
 
-    /** This method uses a default configuration, if a custom configuration wanted to be provided
-      * we recommend using the method [[QueryConstruct.parse()]] instead.
+    /** This method uses a default configuration, if a custom configuration
+      * wanted to be provided we recommend using the method
+      * [[QueryConstruct.parse()]] instead.
       * @param args
       * @return
       */

@@ -4,7 +4,6 @@ import cats.data.Chain
 import cats.data.Kleisli
 import cats.data.ReaderWriterStateT
 import cats.instances.either._
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.Row
@@ -12,10 +11,8 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StructType
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.sparqlparser.Result
-
 import org.slf4j.LoggerFactory
 
 package object engine {
@@ -88,8 +85,8 @@ package object engine {
   type M[A] = ReaderWriterStateT[Result, Config, Log, DataFrame, A]
   val M = ReaderWriterStateT
 
-  /** [[Phase]] represents a phase in the compiler.  It's parametrized
-    * on the input type [[A]] and the output type [[B]].
+  /** [[Phase]] represents a phase in the compiler. It's parametrized on the
+    * input type [[A]] and the output type [[B]].
     */
   type Phase[A, B] = Kleisli[M, A, B]
   val Phase = Kleisli
