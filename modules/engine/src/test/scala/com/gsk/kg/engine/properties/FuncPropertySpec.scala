@@ -1,15 +1,19 @@
 package com.gsk.kg.engine.properties
 
 import cats.syntax.either._
+
+import higherkindness.droste.contrib.NewTypesSyntax._
+
 import org.apache.spark.sql.Row
+
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.scalacheck.CommonGenerators
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import higherkindness.droste.contrib.NewTypesSyntax._
 
 class FuncPropertySpec
     extends AnyWordSpec

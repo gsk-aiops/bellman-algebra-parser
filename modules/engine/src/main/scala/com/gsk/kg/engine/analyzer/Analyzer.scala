@@ -5,13 +5,16 @@ import cats.Foldable
 import cats.data.Validated._
 import cats.data.ValidatedNec
 import cats.implicits._
+
 import higherkindness.droste.Basis
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
-import higherkindness.droste.util.newtypes.@@
 
 object Analyzer {
 

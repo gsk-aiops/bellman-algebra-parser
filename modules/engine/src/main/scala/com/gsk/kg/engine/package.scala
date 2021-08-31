@@ -4,6 +4,9 @@ import cats.data.Chain
 import cats.data.Kleisli
 import cats.data.ReaderWriterStateT
 import cats.instances.either._
+
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.Row
@@ -11,10 +14,11 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StructType
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.Result
-import higherkindness.droste.util.newtypes.@@
+
 import org.slf4j.LoggerFactory
 
 package object engine {

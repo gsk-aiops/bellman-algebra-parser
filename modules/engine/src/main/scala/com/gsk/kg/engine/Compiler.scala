@@ -3,9 +3,13 @@ package com.gsk.kg.engine
 import cats.data.Kleisli
 import cats.implicits._
 import cats.syntax.either._
+
 import higherkindness.droste.Basis
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
+
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.analyzer.Analyzer
@@ -15,7 +19,6 @@ import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.Query
 import com.gsk.kg.sparqlparser.QueryConstruct
 import com.gsk.kg.sparqlparser.Result
-import higherkindness.droste.util.newtypes.@@
 
 object Compiler {
 

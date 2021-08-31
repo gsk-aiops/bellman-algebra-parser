@@ -1,9 +1,11 @@
 package com.gsk.kg.engine.relational
 
 import cats.Eq
-import cats.laws._
 import cats.kernel.laws.discipline._
+import cats.laws._
+
 import org.apache.spark.sql.SQLContext
+
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop
 import org.typelevel.discipline.Laws
@@ -32,7 +34,7 @@ trait RelationalTests[A] extends Laws {
   def relational(implicit A: Arbitrary[A], eq: Eq[A], sc: SQLContext): RuleSet =
     new SimpleRuleSet(
       name = "Relational",
-      "unionEmptyRight" -> Prop.forAll { (a: A) => laws.unionEmptyRight(a) },
-      "unionEmptyLeft" -> Prop.forAll { (a: A) => laws.unionEmptyLeft(a) }
+      "unionEmptyRight" -> Prop.forAll((a: A) => laws.unionEmptyRight(a)),
+      "unionEmptyLeft"  -> Prop.forAll((a: A) => laws.unionEmptyLeft(a))
     )
 }

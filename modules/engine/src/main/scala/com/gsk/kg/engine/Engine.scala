@@ -6,7 +6,11 @@ import cats.implicits.toTraverseOps
 import cats.instances.all._
 import cats.syntax.applicative._
 import cats.syntax.either._
+
 import higherkindness.droste._
+import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.RelationalGroupedDataset
@@ -14,6 +18,7 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.SPOEncoder._
 import com.gsk.kg.engine.data.ChunkedList
@@ -31,8 +36,6 @@ import com.gsk.kg.sparqlparser.Expression
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal._
 import com.gsk.kg.sparqlparser._
-import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
-import higherkindness.droste.util.newtypes.@@
 
 import java.{util => ju}
 
@@ -258,9 +261,9 @@ object Engine {
                   case (other, _) =>
                     other.asInstanceOf[VARIABLE]
                 }.toSet,
-                  accDf
-                    .withColumnRenamed("s", s.s)
-                    .withColumnRenamed("o", o.s)
+                accDf
+                  .withColumnRenamed("s", s.s)
+                  .withColumnRenamed("o", o.s)
               )
             case Left(cond) =>
               val chunk = Chunk(Quad(s, STRING(""), o, g))
@@ -335,10 +338,18 @@ object Engine {
       r: Multiset[DataFrame @@ Untyped]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
     val groupedDF: RelationalGroupedDataset @@ Untyped =
-      RelationalGrouped.Aux[DataFrame @@ Untyped, RelationalGroupedDataset @@ Untyped]
-        .groupBy(r.relational, (vars :+ VARIABLE(GRAPH_VARIABLE.s)).map(_.s).map(col))
+      RelationalGrouped
+        .Aux[DataFrame @@ Untyped, RelationalGroupedDataset @@ Untyped]
+        .groupBy(
+          r.relational,
+          (vars :+ VARIABLE(GRAPH_VARIABLE.s)).map(_.s).map(col)
+        )
 
-    evaluateAggregation(vars :+ VARIABLE(GRAPH_VARIABLE.s), groupedDF.unwrap, func)
+    evaluateAggregation(
+      vars :+ VARIABLE(GRAPH_VARIABLE.s),
+      groupedDF.unwrap,
+      func
+    )
       .map(df =>
         r.copy(
           relational = df.@@,
@@ -491,33 +502,32 @@ object Engine {
         .toList
 
     val df = r.relational.flatMap { solution =>
-        val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
-          triple => triple.filter(x => x._1.isBlank).map(_._1)
+      val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
+        triple => triple.filter(x => x._1.isBlank).map(_._1)
 
-        val blankNodes: Map[String, String] =
-          templateValues
-            .flatMap(extractBlanks)
-            .distinct
-            .map(blankLabel => (blankLabel.s, ju.UUID.randomUUID().toString()))
-            .toMap
+      val blankNodes: Map[String, String] =
+        templateValues
+          .flatMap(extractBlanks)
+          .distinct
+          .map(blankLabel => (blankLabel.s, ju.UUID.randomUUID().toString()))
+          .toMap
 
-        templateValues.map { triple =>
-          val fields: List[Any] = triple
-            .map({
-              case (VARIABLE(s), pos) =>
-                (solution.get(solution.fieldIndex(s)), pos)
-              case (BLANK(x), pos) =>
-                (blankNodes.get(x).get, pos)
-              case (x, pos) =>
-                (x.s, pos)
-            })
-            .sortBy(_._2)
-            .map(_._1)
+      templateValues.map { triple =>
+        val fields: List[Any] = triple
+          .map({
+            case (VARIABLE(s), pos) =>
+              (solution.get(solution.fieldIndex(s)), pos)
+            case (BLANK(x), pos) =>
+              (blankNodes.get(x).get, pos)
+            case (x, pos) =>
+              (x.s, pos)
+          })
+          .sortBy(_._2)
+          .map(_._1)
 
-          SparkRow.fromSeq(fields)
-        }
+        SparkRow.fromSeq(fields)
       }
-      .distinct
+    }.distinct
 
     Multiset[DataFrame @@ Untyped](
       Set.empty,
@@ -568,10 +578,12 @@ object Engine {
         StructField(GRAPH_VARIABLE.s, StringType, false)
     )
 
-    val df = @@[DataFrame, Untyped](sc.sparkSession.createDataFrame(
-      sc.sparkContext.parallelize(sparkRows),
-      schema
-    ))
+    val df = @@[DataFrame, Untyped](
+      sc.sparkSession.createDataFrame(
+        sc.sparkContext.parallelize(sparkRows),
+        schema
+      )
+    )
 
     Multiset[DataFrame @@ Untyped](
       bindings = (vars :+ VARIABLE(GRAPH_VARIABLE.s)).toSet,

@@ -1,11 +1,13 @@
 package com.gsk.kg.engine.functions
 
 import cats.kernel.Monoid
+
 import higherkindness.droste.util.newtypes.@@
-import higherkindness.droste.contrib.NewTypesSyntax._
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
@@ -187,7 +189,10 @@ object PathFrame {
     * @param df2
     * @return
     */
-  def merge(df1: DataFrame @@ Untyped, df2: DataFrame @@ Untyped): DataFrame @@ Untyped = {
+  def merge(
+      df1: DataFrame @@ Untyped,
+      df2: DataFrame @@ Untyped
+  ): DataFrame @@ Untyped = {
 
     def getNewColumns(column: Set[String], mergedCols: Set[String]) = {
       mergedCols.toList.map {
@@ -211,7 +216,7 @@ object PathFrame {
     */
   def toSPOG(pf: PathFrame): DataFrame @@ Untyped = {
 
-    def hasColumn(df: DataFrame @@ Untyped, path: String) = Try((path)).isSuccess
+    def hasColumn(df: DataFrame @@ Untyped, path: String) = Try(path).isSuccess
 
     val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
       case (accDf, (idx, name)) =>

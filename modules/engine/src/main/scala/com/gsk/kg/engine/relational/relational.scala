@@ -1,10 +1,13 @@
 package com.gsk.kg.engine.relational
 
-import com.gsk.kg.engine.relational.Relational.Untyped
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
+
+import com.gsk.kg.engine.relational.Relational.Untyped
+
 import simulacrum.typeclass
 
 /** The [[Relational]] typeclass captures the idea of a datatype [[A]] with
@@ -272,7 +275,7 @@ trait RelationalInstances {
   * @tparam DS
   */
 trait RelationalGrouped[DS] {
-  type B
+  type B // scalastyle:off
   def groupBy(df: DS, columns: Seq[Column]): B
 }
 

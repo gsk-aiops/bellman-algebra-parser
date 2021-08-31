@@ -4,6 +4,6 @@ import higherkindness.droste.util.newtypes.@@
 
 object NewTypesSyntax {
   implicit class NewTypesOps[A](a: A) {
-    def @@[B]: A @@ B = higherkindness.droste.util.newtypes.@@(a)
+    def @@[B]: A @@ B = higherkindness.droste.util.newtypes.@@(a) //scalastyle:off
   }
 }

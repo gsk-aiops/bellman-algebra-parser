@@ -2,18 +2,19 @@ package com.gsk.kg.engine
 
 import cats.kernel.Monoid
 import cats.syntax.all._
+
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.functions._
+
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions._
 
 /** A [[Multiset[A]]], as expressed in SparQL terms.
   *

@@ -3,6 +3,7 @@ package com.gsk.kg.engine.utils
 import com.gsk.kg.engine.Multiset
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.ops._
+
 import org.scalatest.matchers.MatchResult
 import org.scalatest.matchers.Matcher
 import org.scalatest.matchers.should.Matchers

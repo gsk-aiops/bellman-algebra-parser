@@ -4,10 +4,14 @@ import cats.Foldable
 import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
+
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.FuncForms
 import com.gsk.kg.engine.functions.PathFrame._
@@ -15,8 +19,6 @@ import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
-import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
-import higherkindness.droste.util.newtypes.@@
 
 object FuncProperty {
 

@@ -1,14 +1,17 @@
 package com.gsk.kg.engine
 package scalacheck
 
-import cats.{Eq, Show}
+import cats.Eq
+import cats.Show
 import cats.implicits._
-import com.holdenkarau.spark.testing.DataFrameSuiteBase
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 
 import java.net.URI
 import java.{util => ju}
+
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
@@ -182,8 +185,7 @@ trait DataFrameImplicits {
     )
   }
 
-  /**
-    * adapted from spark-testing-base assertDataframeEquals
+  /** adapted from spark-testing-base assertDataframeEquals
     */
   implicit val dataframeEq: Eq[DataFrame] = Eq.instance {
     case (expected, result) =>
@@ -191,8 +193,10 @@ trait DataFrameImplicits {
         expected.rdd.cache
         result.rdd.cache
 
-        val expectedIndexValue = expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
-        val resultIndexValue = expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
+        val expectedIndexValue =
+          expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
+        val resultIndexValue =
+          expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
 
         val unequalRDD = expectedIndexValue
           .join(resultIndexValue)
@@ -201,9 +205,8 @@ trait DataFrameImplicits {
           }
 
         (expected.schema == result.schema) &&
-          expected.rdd.count == result.rdd.count &&
-          unequalRDD.take(10).isEmpty
-
+        expected.rdd.count == result.rdd.count &&
+        unequalRDD.take(10).isEmpty
 
       } finally {
         expected.rdd.unpersist()

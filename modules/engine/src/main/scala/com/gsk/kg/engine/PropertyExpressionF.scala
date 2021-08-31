@@ -1,17 +1,20 @@
 package com.gsk.kg.engine
 
 import cats.implicits._
+
 import higherkindness.droste._
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.properties.FuncProperty
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
 import com.gsk.kg.sparqlparser.Result
-import higherkindness.droste.util.newtypes.@@
 
 object PropertyExpressionF {
 
