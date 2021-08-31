@@ -65,7 +65,7 @@ class PropertyPathRewriteSpec
             |
             |SELECT ?s ?o
             |WHERE {
-            | ?s foaf:knows|foaf:name|foaf:mbox ?o .
+            | ?s foaf:knows|foaf:name|foaf:mbox|foaf:knows2 ?o .
             |}
             |""".stripMargin
 
