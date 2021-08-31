@@ -1,15 +1,15 @@
 package com.gsk.kg.engine.properties
 
 import cats.syntax.either._
-
 import org.apache.spark.sql.Row
-
 import com.gsk.kg.engine.compiler.SparkSpec
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import higherkindness.droste.contrib.NewTypesSyntax._
 
 class FuncPropertySpec
     extends AnyWordSpec
@@ -46,13 +46,13 @@ class FuncPropertySpec
             "<http://xmlns.org/foaf/0.1/name>",
             "\"Charles\""
           )
-        ).toDF("s", "p", "o")
+        ).toDF("s", "p", "o").@@[Untyped]
 
         val uriFunc = FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
         uriFunc shouldBe a[Left[_, _]]
 
         val result = df.select(uriFunc.left.get)
-        result.collect().toSet shouldEqual Set(
+        result.collect.toSet shouldEqual Set(
           Row("<http://xmlns.org/foaf/0.1/knows>"),
           Row("<http://xmlns.org/foaf/0.1/knows>")
         )
@@ -79,7 +79,7 @@ class FuncPropertySpec
             "<http://www.w3.org/2000/01/rdf-schema#label2>",
             "Another title"
           )
-        ).toDF("s", "p", "o")
+        ).toDF("s", "p", "o").@@[Untyped]
 
         lazy val titleUriFunc =
           FuncProperty.uri("<http://purl.org/dc/elements/1.1/title>")
@@ -90,7 +90,7 @@ class FuncPropertySpec
 
         alternativeFunc.right.get shouldBe a[Left[_, _]]
 
-        val result = df.select(alternativeFunc.right.get.left.get).collect()
+        val result = df.select(alternativeFunc.right.get.left.get).collect
         result.toSet shouldEqual Set(Row(true), Row(true), Row(false))
       }
     }
@@ -115,7 +115,7 @@ class FuncPropertySpec
             "<http://xmlns.org/foaf/0.1/name>",
             "\"Charles\""
           )
-        ).toDF("s", "p", "o")
+        ).toDF("s", "p", "o").@@[Untyped]
 
         lazy val knowsUriFunc =
           FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -137,7 +137,7 @@ class FuncPropertySpec
           )
         } yield outerSeq
 
-        result.right.get.right.get.collect().toSet shouldEqual Set(
+        result.right.get.right.get.collect.toSet shouldEqual Set(
           Row("<http://example.org/Alice>", "\"Charles\"")
         )
       }
@@ -175,7 +175,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -187,7 +187,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -273,7 +273,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -285,7 +285,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -329,7 +329,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -341,7 +341,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -451,7 +451,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -494,7 +494,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           // ?s foaf:knows+ ?o
           lazy val knowsUriFunc =
@@ -503,7 +503,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -595,7 +595,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           // ?s foaf:knows* ?o
           lazy val knowsUriFunc =
@@ -604,7 +604,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -732,7 +732,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           // ?s foaf:knows? ?o
           lazy val knowsUriFunc =
@@ -741,7 +741,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -833,7 +833,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -845,7 +845,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -889,7 +889,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -900,7 +900,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), None, knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -968,7 +968,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -979,7 +979,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, None, Some(n), knowsUriFunc)
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "\"Charles\"",
               null,
@@ -1089,7 +1089,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -1134,7 +1134,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -1143,7 +1143,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc))
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
@@ -1180,7 +1180,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o")
+          ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
@@ -1191,7 +1191,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc, fooUriFunc))
 
-          result.right.get.right.get.collect().toSet shouldEqual Set(
+          result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",

@@ -3,20 +3,19 @@ package com.gsk.kg.engine
 import cats.data.Kleisli
 import cats.implicits._
 import cats.syntax.either._
-
 import higherkindness.droste.Basis
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
-
 import com.gsk.kg.Graphs
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.analyzer.Analyzer
 import com.gsk.kg.engine.data.ToTree._
 import com.gsk.kg.engine.optimizer.Optimizer
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.Query
 import com.gsk.kg.sparqlparser.QueryConstruct
 import com.gsk.kg.sparqlparser.Result
+import higherkindness.droste.util.newtypes.@@
 
 object Compiler {
 
@@ -26,7 +25,7 @@ object Compiler {
   ): Result[DataFrame] =
     compiler(df)
       .run(query)
-      .run(config, df)
+      .run(config, @@(df))
       .map { case (log, _, df) =>
         Log.run(log)
         df
@@ -38,7 +37,7 @@ object Compiler {
     val df = List.empty[(String, String, String)].toDF("s", "p", "o")
     compiler(df)
       .run(query)
-      .run(Config.default, df) match {
+      .run(Config.default, @@(df)) match {
       case Left(x) => println(x)
       case Right((log, _, df)) =>
         Log.run(log)
@@ -86,7 +85,7 @@ object Compiler {
   ): Phase[T, DataFrame] =
     Kleisli[M, T, DataFrame] { query =>
       Log.info("Engine", "Running the engine") *>
-        M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
           Engine.evaluate(df, query, config)
         }
     }
@@ -96,7 +95,7 @@ object Compiler {
   private def parser: Phase[String, (Query, Graphs)] =
     Kleisli[M, String, (Query, Graphs)] { query =>
       Log.info("Parser", "Running the parser") *>
-        M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
           QueryConstruct.parse(query, config)
         }
     }
@@ -110,7 +109,7 @@ object Compiler {
   private def rdfFormatter: Phase[DataFrame, DataFrame] = {
     Kleisli[M, DataFrame, DataFrame] { inDf =>
       Log.info("RdfFormatter", "Running the RDF formatter") *>
-        M.ask[Result, Config, Log, DataFrame].map { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
           RdfFormatter.formatDataFrame(inDf, config)
         }
     }

@@ -2,14 +2,10 @@ package com.gsk.kg.engine
 
 import cats.data.NonEmptyList
 import cats.implicits._
-
 import higherkindness.droste._
 import higherkindness.droste.macros.deriveTraverse
-
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.functions.FuncArithmetics
 import com.gsk.kg.engine.functions.FuncDates
@@ -18,7 +14,10 @@ import com.gsk.kg.engine.functions.FuncHash
 import com.gsk.kg.engine.functions.FuncNumerics
 import com.gsk.kg.engine.functions.FuncStrings
 import com.gsk.kg.engine.functions.FuncTerms
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser._
+import higherkindness.droste.util.newtypes.@@
 
 /** [[ExpressionF]] is a pattern functor for the recursive
   * [[Expression]].
@@ -381,7 +380,7 @@ object ExpressionF {
   def compile[T](
       t: T,
       config: Config
-  )(implicit T: Basis[ExpressionF, T]): DataFrame => Result[Column] = df => {
+  )(implicit T: Basis[ExpressionF, T], sc: SQLContext): DataFrame @@ Untyped => Result[Column] = df => {
     val algebraM: AlgebraM[M, ExpressionF, Column] =
       AlgebraM.apply[M, ExpressionF, Column] {
         case ADD(l, r)      => FuncArithmetics.add(l, r).pure[M]
@@ -445,7 +444,7 @@ object ExpressionF {
         case LANG_STRING(s, tag)        => lit(s""""$s"@$tag""").pure[M]
         case NUM(s)                     => lit(s).pure[M]
         case VARIABLE(s) =>
-          M.inspect[Result, Config, Log, DataFrame, Column](_(s))
+          M.inspect[Result, Config, Log, DataFrame @@ Untyped, Column](_.getColumn(s))
         case URIVAL(s)   => lit(s).pure[M]
         case BLANK(s)    => lit(s).pure[M]
         case BOOL(s)     => lit(s).pure[M]
@@ -475,7 +474,7 @@ object ExpressionF {
   }
 
   private def unknownFunction(name: String): M[Column] =
-    M.liftF[Result, Config, Log, DataFrame, Column](
+    M.liftF[Result, Config, Log, DataFrame @@ Untyped, Column](
       EngineError.UnknownFunction(name).asLeft[Column]
     )
 

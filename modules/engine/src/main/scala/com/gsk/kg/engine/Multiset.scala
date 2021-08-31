@@ -1,31 +1,24 @@
 package com.gsk.kg.engine
 
 import cats.kernel.Monoid
-import cats.kernel.Semigroup
 import cats.syntax.all._
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.SQLContext
+import com.gsk.kg.engine.relational.Relational
+import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.sparqlparser.{EngineError, Result}
+import com.gsk.kg.sparqlparser.StringVal.{GRAPH_VARIABLE, VARIABLE}
+import org.apache.spark.sql.{Column, DataFrame, Row, SQLContext}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions._
-import com.gsk.kg.engine.Multiset._
-import com.gsk.kg.engine.relational.Relational
-import com.gsk.kg.sparqlparser.EngineError
-import com.gsk.kg.sparqlparser.Result
-import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
-import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-import com.gsk.kg.engine.relational.Relational._
 
-/** A [[Multiset]], as expressed in SparQL terms.
+/** A [[Multiset[A]]], as expressed in SparQL terms.
   *
   * @see See [[https://www.w3.org/2001/sw/DataAccess/rq23/rq24-algebra.html]]
-  * @param bindings the variables this multiset expose
-  * @param dataframe the underlying data that the multiset contains
+  * @param bindings the variables this Multiset[A] expose
+  * @param relational the underlying data that the Multiset[A] contains
   */
 final case class Multiset[A: Relational](
     bindings: Set[VARIABLE],
-    dataframe: A
+    relational: A
 ) {
 
   /** Join two multisets following SparQL semantics.  If two multisets
@@ -50,12 +43,12 @@ final case class Multiset[A: Relational](
       case (l, r) if noCommonBindings(l, r) =>
         Multiset(
           l.bindings union r.bindings,
-          l.dataframe.crossJoin(r.dataframe.drop(GRAPH_VARIABLE.s))
+          l.relational.crossJoin(r.relational.drop(GRAPH_VARIABLE.s))
         )
       case (l, r) =>
         Multiset(
           l.bindings union r.bindings,
-          innerJoinWithGraphsColumn(l.dataframe, r.dataframe)
+          innerJoinWithGraphsColumn(l.relational, r.relational)
         )
     }
   }
@@ -69,12 +62,12 @@ final case class Multiset[A: Relational](
     case (l, r) if l.isEmpty => l
     case (l, r) if r.isEmpty => l
     case (l, r) if noCommonBindings(l, r) =>
-      val df = l.dataframe.crossJoin(r.dataframe)
+      val df = l.relational.crossJoin(r.relational)
       Multiset(l.bindings union r.bindings, df)
     case (l, r) =>
       val df =
-        l.dataframe.leftJoin(
-          filterGraph(r).dataframe,
+        l.relational.leftJoin(
+          filterGraph(r).relational,
           (l.bindings intersect filterGraph(r).bindings).toSeq
             .map(_.s)
         )
@@ -131,7 +124,7 @@ final case class Multiset[A: Relational](
     case (a, b) =>
       Multiset(
         a.bindings.union(b.bindings),
-        a.dataframe.minus(b.dataframe)
+        a.relational.minus(b.relational)
       )
   }
 
@@ -139,9 +132,9 @@ final case class Multiset[A: Relational](
     *
     * @return
     */
-  def isEmpty: Boolean = bindings.isEmpty && dataframe.columns.isEmpty
+  def isEmpty: Boolean = bindings.isEmpty && relational.columns.isEmpty
 
-  /** Get a new multiset with only the projected [[vars]].
+  /** Get a new Multiset[A] with only the projected [[vars]].
     *
     * @param vars
     * @return
@@ -149,10 +142,10 @@ final case class Multiset[A: Relational](
   def select(vars: VARIABLE*): Multiset[A] =
     Multiset(
       bindings.intersect(vars.toSet),
-      dataframe.select(vars.map(v => col(v.s)))
+      relational.select(vars.map(v => col(v.s)))
     )
 
-  /** Add a new column to the multiset, with the given binding
+  /** Add a new column to the Multiset[A], with the given binding
     *
     * @param binding
     * @param col
@@ -165,7 +158,7 @@ final case class Multiset[A: Relational](
   ): Multiset[A] =
     Multiset(
       bindings + binding,
-      dataframe
+      relational
         .withColumn(binding.s, column)
     )
 
@@ -185,7 +178,7 @@ final case class Multiset[A: Relational](
         .NumericTypesDoNotMatch(s"$l to big to be converted to an Int")
         .asLeft
     case l =>
-      this.copy(dataframe = dataframe.limit(l.toInt)).asRight
+      this.copy(relational = relational.limit(l.toInt)).asRight
   }
 
   /** An offset solution sequence with respect to another solution sequence S, is one which starts at a given index of S.
@@ -196,10 +189,10 @@ final case class Multiset[A: Relational](
     * @param offset
     * @return
     */
-  def offset(offset: Long): Result[Multiset[A]] = if (offset < 0) {
+  def offset(offset: Long)(implicit sc: SQLContext): Result[Multiset[A]] = if (offset < 0) {
     EngineError.UnexpectedNegative(s"Negative offset: $offset").asLeft
   } else {
-    this.copy(dataframe = dataframe.offset(offset)).asRight
+    this.copy(relational = relational.offset(offset)).asRight
   }
 
   /** Filter restrict the set of solutions according to a given expression.
@@ -207,8 +200,8 @@ final case class Multiset[A: Relational](
     * @return
     */
   def filter(col: Column): Result[Multiset[A]] = {
-    val filtered = dataframe.filter(col)
-    this.copy(dataframe = filtered).asRight
+    val filtered = relational.filter(col)
+    this.copy(relational = filtered).asRight
   }
 
   /** Eliminates duplicates from the dataframe that matches the same variable binding
@@ -217,7 +210,7 @@ final case class Multiset[A: Relational](
   def distinct: Result[Multiset[A]] = {
     this
       .copy(
-        dataframe = this.dataframe.distinct()
+        relational = this.relational.distinct
       )
       .asRight
   }
@@ -230,20 +223,20 @@ final case class Multiset[A: Relational](
     } else {
       m.copy(
         bindings = m.bindings.filter(_.s != GRAPH_VARIABLE.s),
-        dataframe = m.dataframe.drop(GRAPH_VARIABLE.s)
+        relational = m.relational.drop(GRAPH_VARIABLE.s)
       )
     }
   }
 
-  /** Adds graph binding and column to the Multiset (with default graph as the default value)
+  /** Adds graph binding and column to the Multiset[A] (with default graph as the default value)
     */
-  private val addDefaultGraph: Multiset => Multiset = { m =>
+  private val addDefaultGraph: Multiset[A] => Multiset[A] = { m =>
     if (m.isEmpty) {
       m
     } else {
       m.copy(
         bindings = m.bindings + VARIABLE(GRAPH_VARIABLE.s),
-        dataframe = m.dataframe.withColumn(GRAPH_VARIABLE.s, lit(""))
+        relational = m.relational.withColumn(GRAPH_VARIABLE.s, lit(""))
       )
     }
   }
@@ -261,9 +254,9 @@ final case class Multiset[A: Relational](
     * @param r
     * @return
     */
-  private def containsGraphVariables(l: Multiset, r: Multiset): Boolean =
-    l.dataframe.columns.contains(GRAPH_VARIABLE.s) &&
-      r.dataframe.columns.contains(GRAPH_VARIABLE.s)
+  private def containsGraphVariables(l: Multiset[A], r: Multiset[A]): Boolean =
+    l.relational.columns.contains(GRAPH_VARIABLE.s) &&
+      r.relational.columns.contains(GRAPH_VARIABLE.s)
 
   /** This methods is a utility to perform operations like [[union]], [[join]], [[leftJoin]] on Multisets without
     * taking into account graph bindings and graph columns on dataframes by:
@@ -273,9 +266,9 @@ final case class Multiset[A: Relational](
     * @param f
     * @return
     */
-  private def graphAgnostic(left: Multiset, right: Multiset)(
-      f: (Multiset, Multiset) => Multiset
-  ): Multiset =
+  private def graphAgnostic(left: Multiset[A], right: Multiset[A])(
+      f: (Multiset[A], Multiset[A]) => Multiset[A]
+  ): Multiset[A] =
     addDefaultGraph(f(filterGraph(left), filterGraph(right)))
 
   /** This method performs a inner join between graphs by merging the graph columns of each dataframes into an array
@@ -356,7 +349,9 @@ final case class Multiset[A: Relational](
     }(RowEncoder(resultSchema))
 
     // Needed to keep Schema information on each Row. We will have GenericRowWithSchema instead of GenericRow
-    sc.sparkSession.createDataFrame(result.toJavaRDD, resultSchema)
+    // TODO: do we really need to transform to javardd?
+    // sc.sparkSession.createDataFrame(result.toJavaRDD, resultSchema)
+    result
   }
 
 }
@@ -451,7 +446,7 @@ object Multiset {
   def fromRelational[A: Relational](relational: A)(implicit
       sc: SQLContext
   ): Multiset[A] =
-    Multiset(df.columns.map(VARIABLE).toSet, relational)
+    Multiset(relational.columns.map(VARIABLE).toSet, relational)
 
   implicit def monoid[A: Relational](implicit
       sc: SQLContext
@@ -460,5 +455,4 @@ object Multiset {
       def combine(x: Multiset[A], y: Multiset[A]): Multiset[A] = x.join(y)
       def empty: Multiset[A]                                   = Multiset(Set.empty, Relational[A].empty)
     }
-
 }
