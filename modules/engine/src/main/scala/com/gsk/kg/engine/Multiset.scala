@@ -4,9 +4,14 @@ import cats.kernel.Monoid
 import cats.syntax.all._
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.ops._
-import com.gsk.kg.sparqlparser.{EngineError, Result}
-import com.gsk.kg.sparqlparser.StringVal.{GRAPH_VARIABLE, VARIABLE}
-import org.apache.spark.sql.{Column, DataFrame, Row, SQLContext}
+import com.gsk.kg.sparqlparser.EngineError
+import com.gsk.kg.sparqlparser.Result
+import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
+import com.gsk.kg.sparqlparser.StringVal.VARIABLE
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions._
 
@@ -189,7 +194,9 @@ final case class Multiset[A: Relational](
     * @param offset
     * @return
     */
-  def offset(offset: Long)(implicit sc: SQLContext): Result[Multiset[A]] = if (offset < 0) {
+  def offset(offset: Long)(implicit sc: SQLContext): Result[Multiset[A]] = if (
+    offset < 0
+  ) {
     EngineError.UnexpectedNegative(s"Negative offset: $offset").asLeft
   } else {
     this.copy(relational = relational.offset(offset)).asRight
@@ -349,96 +356,16 @@ final case class Multiset[A: Relational](
     }(RowEncoder(resultSchema))
 
     // Needed to keep Schema information on each Row. We will have GenericRowWithSchema instead of GenericRow
-    // TODO: do we really need to transform to javardd?
-    // sc.sparkSession.createDataFrame(result.toJavaRDD, resultSchema)
-    result
+    Relational[A]
+      .fromDataFrame(
+        sc.sparkSession
+          .createDataFrame(result.toDataFrame.toJavaRDD, resultSchema)
+      )
   }
 
 }
 
 object Multiset {
-
-  /** This method performs a cross join between graphs by merging the graph columns of each dataframes into an array
-    * column, this way we generate new rows for each graph that is in the array. Eg:
-    * Initial dataframes:
-    * l.dataframe = List(
-    *   ("a", "graph1"),
-    *   ("b", "graph1")
-    * ).toDF("?x", "*g")
-    * r.dataframe = List((1, "graph2"), (2, "graph2")).toDF("?y", "*g")
-    *
-    * Step1:
-    * step1Dataframe = List(
-    *   ("a", 1, "graph1", "graph2"),
-    *   ("a", 2, "graph1", "graph2"),
-    *   ("b", 1, "graph1", "graph2"),
-    *   ("b", 2, "graph1", "graph2")
-    * ).toDF("?x", "?y", "*l", "*r")
-    *
-    * Step2:
-    * step2Dataframe = List(
-    *   ("a", 1, List("graph1", "graph2")),
-    *   ("a", 2, List("graph1", "graph2")),
-    *   ("b", 1, List("graph1", "graph2")),
-    *   ("b", 2, List("graph1", "graph2"))
-    * ).toDF("?x", "?y", "*g")
-    *
-    * Final:
-    * final = List(
-    *  ("a", 1, "graph1"),
-    *  ("a", 1, "graph2"),
-    *  ("a", 2, "graph1"),
-    *  ("a", 2, "graph2"),
-    *  ("b", 1, "graph1"),
-    *  ("b", 1, "graph2"),
-    *  ("b", 2, "graph1"),
-    *  ("b", 2, "graph2")
-    * ).toDF("?x", "?y", "*g")
-    *
-    * IMPORTANT!: This method could have some performance issues as it traverses entire dataframe, and should be revisited
-    * for performance improvements.
-    * @param l
-    * @param r
-    * @return
-    */
-  private def crossJoinWithGraphsColumns(
-      l: DataFrame,
-      r: DataFrame
-  )(implicit sc: SQLContext): DataFrame = {
-    val leftGraphCol  = "*l"
-    val rightGraphCol = "*r"
-
-    // Generates DF with two different columns of graphs *l, *r
-    val productWithGraphs = l
-      .as("a")
-      .withColumnRenamed(GRAPH_VARIABLE.s, leftGraphCol)
-      .crossJoin(
-        r
-          .withColumnRenamed(GRAPH_VARIABLE.s, rightGraphCol)
-          .as("b")
-      )
-
-    // Merges the *l and *r columns into a *g column with Array(l, r)
-    val productWithMergedGraphColunns = productWithGraphs
-      .withColumn(GRAPH_VARIABLE.s, array(leftGraphCol, rightGraphCol))
-      .drop(leftGraphCol, rightGraphCol)
-
-    // Generates a schema for the final DF (needed for the flatMap)
-    val resultSchema = productWithGraphs
-      .drop(leftGraphCol, rightGraphCol)
-      .withColumn(GRAPH_VARIABLE.s, lit(""))
-      .schema
-
-    // For each element on the array of *g column it generates a new row with the graph (unfolds *g column)
-    val result = productWithMergedGraphColunns.flatMap { r =>
-      val index  = r.fieldIndex(GRAPH_VARIABLE.s)
-      val graphs = r.getSeq[String](index)
-      graphs.distinct.map(g => Row.fromSeq(r.toSeq.dropRight(1) :+ g))
-    }(RowEncoder(resultSchema))
-
-    // Needed to keep Schema information on each Row. We will have GenericRowWithSchema instead of GenericRow
-    sc.sparkSession.createDataFrame(result.toJavaRDD, resultSchema)
-  }
 
   def empty[A: Relational](implicit sc: SQLContext): Multiset[A] =
     Multiset(Set.empty, Relational[A].empty)

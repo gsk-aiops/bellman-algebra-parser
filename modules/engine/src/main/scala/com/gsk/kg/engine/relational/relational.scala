@@ -44,13 +44,14 @@ import simulacrum.typeclass
   def select(df: A, column: Column): A =
     select(df, Seq(column))
   def schema(df: A): StructType
-  def fromDataFrame(df: DataFrame): Option[A]
+  def fromDataFrame(df: DataFrame): A
   def getColumn(df: A, col: String): Column
   def orderBy(df: A, columns: Seq[Column]): A
   def intersect(df: A, other: A): A
   def map[U: Encoder](df: A, fn: Row => U): A
   def flatMap[U: Encoder](df: A, fn: Row => TraversableOnce[U]): A
   def collect(df: A): Array[Row]
+  def toDataFrame(df: A): DataFrame
 }
 
 object Relational extends RelationalInstances {
@@ -216,9 +217,8 @@ trait RelationalInstances {
       def schema(df: DataFrame @@ Untyped): StructType =
         df.unwrap.schema
 
-      def fromDataFrame(df: DataFrame): Option[DataFrame @@ Untyped] = Some(
+      def fromDataFrame(df: DataFrame): DataFrame @@ Untyped =
         @@(df)
-      )
 
       def getColumn(df: DataFrame @@ Untyped, col: String): Column =
         df.unwrap(col)
@@ -251,6 +251,9 @@ trait RelationalInstances {
 
       def collect(df: DataFrame @@ Untyped): Array[Row] =
         df.unwrap.collect()
+
+      def toDataFrame(df: DataFrame @@ Untyped): DataFrame =
+        df.unwrap
     }
 }
 
