@@ -126,6 +126,7 @@ object ToTree extends LowPriorityToTreeInstances0 {
             Node("Table", Stream(v.toTree, rs.toTree))
           case DAG.Exists(not, p, r) => Node("Exists", Stream(not.toTree, p, r))
           case DAG.Noop(str)         => Leaf(s"Noop($str)")
+          case DAG.Wrap(pe)         => Leaf(s"Wrap($pe)")
         }
 
         val t = scheme.cata(alg)

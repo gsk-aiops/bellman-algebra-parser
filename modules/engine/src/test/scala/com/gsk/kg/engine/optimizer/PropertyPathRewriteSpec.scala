@@ -6,6 +6,7 @@ import com.gsk.kg.engine.DAG.Join
 import com.gsk.kg.engine.DAG.Path
 import com.gsk.kg.engine.DAG.Project
 import com.gsk.kg.engine.DAG.Union
+import com.gsk.kg.engine.data.ToTree.ToTreeOps
 import com.gsk.kg.sparqlparser.PropertyExpression.Reverse
 import com.gsk.kg.sparqlparser.PropertyExpression.Uri
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
@@ -65,14 +66,18 @@ class PropertyPathRewriteSpec
             |
             |SELECT ?s ?o
             |WHERE {
-            | ?s foaf:knows|foaf:name|foaf:mbox|foaf:knows2 ?o .
+            | ?s foaf:knows|foaf:name|foaf:mbox|foaf:potato|foaf:a|foaf:b ?o .
             |}
             |""".stripMargin
 
         parse(q, config)
           .map { case (query, _) =>
+            import cats.instances.string._
             val dag: T  = DAG.fromQuery.apply(query)
             val reverse = PropertyPathRewrite[T].apply(dag)
+
+            println(dag.toTree.drawTree)
+            println(reverse.toTree.drawTree)
 
             Fix.un(reverse) match {
               case Project(
@@ -97,8 +102,8 @@ class PropertyPathRewriteSpec
                 el shouldEqual Uri("<http://xmlns.org/foaf/0.1/knows>")
                 ell shouldEqual Uri("<http://xmlns.org/foaf/0.1/name>")
                 err shouldEqual Uri("<http://xmlns.org/foaf/0.1/mbox>")
-              case _ =>
-                fail
+              case x =>
+                fail(x.toString)
             }
           }
       }
