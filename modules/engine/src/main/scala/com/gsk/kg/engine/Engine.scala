@@ -90,8 +90,8 @@ object Engine {
   }
 
   private def validateInputDataFrame(
-                                      df: DataFrame @@ Untyped
-                                    ): Result[DataFrame @@ Untyped] = {
+      df: DataFrame @@ Untyped
+  ): Result[DataFrame @@ Untyped] = {
     val hasThreeOrFourColumns = df.columns.length == 3 || df.columns.length == 4
 
     for {
@@ -217,9 +217,9 @@ object Engine {
     l.minus(r).pure[M]
 
   private def evaluateScan(
-                            graph: String,
-                            expr: Multiset[DataFrame @@ Untyped]
-                          ): M[Multiset[DataFrame @@ Untyped]] = {
+      graph: String,
+      expr: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val bindings =
       expr.bindings.filter(_.s != GRAPH_VARIABLE.s) + VARIABLE(graph)
     val df = expr.relational.withColumn(graph, col(GRAPH_VARIABLE.s))
@@ -333,10 +333,10 @@ object Engine {
     M.liftF(r.distinct)
 
   private def evaluateGroup(
-                             vars: List[VARIABLE],
-                             func: List[(VARIABLE, Expression)],
-                             r: Multiset[DataFrame @@ Untyped]
-                           ): M[Multiset[DataFrame @@ Untyped]] = {
+      vars: List[VARIABLE],
+      func: List[(VARIABLE, Expression)],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val groupedDF: RelationalGroupedDataset @@ Untyped =
       RelationalGrouped
         .Aux[DataFrame @@ Untyped, RelationalGroupedDataset @@ Untyped]
@@ -401,9 +401,9 @@ object Engine {
   }
 
   private def evaluateOrder(
-                             conds: NonEmptyList[ConditionOrder],
-                             r: Multiset[DataFrame @@ Untyped]
-                           ): M[Multiset[DataFrame @@ Untyped]] = {
+      conds: NonEmptyList[ConditionOrder],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
       conds
         .map {
@@ -429,10 +429,10 @@ object Engine {
   }
 
   private def evaluateLeftJoin(
-                                l: Multiset[DataFrame @@ Untyped],
-                                r: Multiset[DataFrame @@ Untyped],
-                                filters: List[Expression]
-                              ): M[Multiset[DataFrame @@ Untyped]] = {
+      l: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped],
+      filters: List[Expression]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     NonEmptyList
       .fromList(filters)
       .map { nelFilters =>
@@ -444,9 +444,9 @@ object Engine {
   }
 
   private def evaluateFilter(
-                              funcs: NonEmptyList[Expression],
-                              expr: Multiset[DataFrame @@ Untyped]
-                            ): M[Multiset[DataFrame @@ Untyped]] = {
+      funcs: NonEmptyList[Expression],
+      expr: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val compiledFuncs: M[NonEmptyList[DataFrame @@ Untyped => Result[Column]]] =
       M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
         funcs.map(t => ExpressionF.compile[Expression](t, config))
@@ -456,7 +456,7 @@ object Engine {
       _.foldLeft(expr.asRight: Result[Multiset[DataFrame @@ Untyped]]) {
         case (eitherAcc, f) =>
           for {
-            acc <- eitherAcc
+            acc       <- eitherAcc
             filterCol <- f(acc.relational)
             result <-
               expr
@@ -544,10 +544,10 @@ object Engine {
     evaluateConstructPlain(bgp, r).pure[M]
 
   private def evaluateBind(
-                            bindTo: VARIABLE,
-                            bindFrom: Expression,
-                            r: Multiset[DataFrame @@ Untyped]
-                          ): M[Multiset[DataFrame @@ Untyped]] = {
+      bindTo: VARIABLE,
+      bindFrom: Expression,
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
       val getColumn = ExpressionF.compile(bindFrom, config)
       getColumn(r.relational).map { col =>
@@ -592,10 +592,10 @@ object Engine {
   }.pure[M]
 
   private def evaluateExists(
-                              not: Boolean,
-                              p: Multiset[DataFrame @@ Untyped],
-                              r: Multiset[DataFrame @@ Untyped]
-                            ): M[Multiset[DataFrame @@ Untyped]] = {
+      not: Boolean,
+      p: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val cols = p.relational.columns intersect r.relational.columns
 
     val resultDf = if (!not) {

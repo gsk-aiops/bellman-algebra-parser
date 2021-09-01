@@ -216,7 +216,9 @@ object PathFrame {
     */
   def toSPOG(pf: PathFrame): DataFrame @@ Untyped = {
 
-    def hasColumn(df: DataFrame @@ Untyped, path: String) = Try(df.getColumn(path)).isSuccess
+    def hasColumn(df: DataFrame @@ Untyped, path: String) = Try(
+      df.getColumn(path)
+    ).isSuccess
 
     val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
       case (accDf, (idx, name)) =>

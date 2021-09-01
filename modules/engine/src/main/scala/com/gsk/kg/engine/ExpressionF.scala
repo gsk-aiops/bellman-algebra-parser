@@ -9,7 +9,6 @@ import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.config.Config
@@ -386,7 +385,7 @@ object ExpressionF {
       t: T,
       config: Config
   )(implicit
-    T: Basis[ExpressionF, T]
+      T: Basis[ExpressionF, T]
   ): DataFrame @@ Untyped => Result[Column] = df => {
     val algebraM: AlgebraM[M, ExpressionF, Column] =
       AlgebraM.apply[M, ExpressionF, Column] {
