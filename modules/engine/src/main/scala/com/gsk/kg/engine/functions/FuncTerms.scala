@@ -222,4 +222,10 @@ object FuncTerms {
     val endPos   = length(u)
     u.substr(startPos, endPos)
   }
+
+  def bNode: Column = {
+    val prefix = "_:"
+    val bnodeGen = prefix + java.util.UUID.randomUUID().toString
+    lit(bnodeGen)
+  }
 }

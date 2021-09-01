@@ -282,5 +282,21 @@ class FuncTermsSpec
           .toSet shouldEqual Set(Row(true))
       }
     }
+
+    "FuncTerms.bNode" should {
+      "return a bnode Column with a UUID random name" in {
+        val df = List(
+          "foo"
+        ).toDF("fooColumn")
+
+        val bnodeRegexColName = "bnodeR"
+
+        val uuidRegex = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+
+        df.select(FuncTerms.bNode
+          .rlike(uuidRegex)
+          .as(bnodeRegexColName)).collect() shouldEqual Array(Row(true))
+      }
+    }
   }
 }

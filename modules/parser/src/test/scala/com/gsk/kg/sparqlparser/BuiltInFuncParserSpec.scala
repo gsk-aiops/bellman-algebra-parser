@@ -502,4 +502,17 @@ class BuiltInFuncParserSpec extends AnyFlatSpec {
       case _ => fail
     }
   }
+
+  "BNODE parser" should "return BNODE type" in {
+    val p =
+      fastparse.parse(
+        """(bnode)""" ,
+        BuiltInFuncParser.bNodeParen(_)
+      )
+    p.get.value match {
+      case BNODE() =>
+        succeed
+      case _ => fail
+    }
+  }
 }
