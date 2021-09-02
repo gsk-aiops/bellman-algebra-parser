@@ -2,7 +2,6 @@ package com.gsk.kg.engine
 
 import cats.data.Kleisli
 import cats.implicits._
-import cats.syntax.either._
 
 import higherkindness.droste.Basis
 import higherkindness.droste.util.newtypes.@@
@@ -24,7 +23,7 @@ object Compiler {
 
   // scalastyle:off
   def compile(df: DataFrame, query: String, config: Config)(implicit
-                                                            sc: SQLContext
+      sc: SQLContext
   ): Result[DataFrame] =
     compiler
       .run((query, df))
@@ -93,12 +92,13 @@ object Compiler {
     * @return
     */
   private def compiler[T: Basis[DAG, *]](implicit
-                                         sc: SQLContext
-                                        ): Phase[(String, DataFrame), DataFrame] = {
+      sc: SQLContext
+  ): Phase[(String, DataFrame), DataFrame] = {
     (parser
       .andThen(transformToGraph.first[Graphs])
       .andThen(staticAnalysis.first[Graphs])
-      .andThen(optimizer)).first[DataFrame]
+      .andThen(optimizer))
+      .first[DataFrame]
       .andThen(dataFrameTyper.second[T])
       .andThen(engine[T])
       .andThen(rdfFormatter)
@@ -124,8 +124,8 @@ object Compiler {
     * @return
     */
   private def engine[T: Basis[DAG, *]](implicit
-                                       sc: SQLContext
-                                      ): Phase[(T, DataFrame), DataFrame] =
+      sc: SQLContext
+  ): Phase[(T, DataFrame), DataFrame] =
     Kleisli[M, (T, DataFrame), DataFrame] { case (query, df) =>
       Log.info("Engine", "Running the engine") *>
         M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>

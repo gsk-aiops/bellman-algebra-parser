@@ -11,12 +11,12 @@ import com.gsk.kg.engine.functions.Literals.LocalizedLiteral
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
 
 object Tokens {
-  val openAngleBracket = "<"
+  val openAngleBracket    = "<"
   val closingAngleBracket = ">"
-  val doubleQuote = "\""
-  val typeAnnotation = "^^"
-  val langAnnotation = "@"
-  val blankNode = "_:"
+  val doubleQuote         = "\""
+  val typeAnnotation      = "^^"
+  val langAnnotation      = "@"
+  val blankNode           = "_:"
 }
 
 trait RdfType {
@@ -71,9 +71,9 @@ object DataFrameTyper {
     .add("type", StringType)
 
   def applyTransformationToDF(
-                               df: DataFrame,
-                               transform: Column => Column
-                             ): DataFrame =
+      df: DataFrame,
+      transform: Column => Column
+  ): DataFrame =
     df.columns.foldLeft(df) { case (acc, column) =>
       acc.withColumn(column, transform(df(column)))
     }
@@ -141,10 +141,10 @@ object DataFrameTyper {
 
   // scalafix:off
   def createRecord(
-                    value: Column,
-                    tpe: Column,
-                    lang: Column = lit(null) // scalastyle:off
-                  ): Column =
+      value: Column,
+      tpe: Column,
+      lang: Column = lit(null) // scalastyle:off
+  ): Column =
     struct(
       value.as("value"),
       tpe.as("type"),
