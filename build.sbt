@@ -155,9 +155,6 @@ lazy val `bellman-spark-engine` = project
         "scalatestplus"
       ) % Test
     ),
-    libraryDependencies ++= on(2, 11)(
-      "net.sansa-stack" %% "sansa-rdf-spark" % Versions("sansa") % Test
-    ).value,
     dependencyOverrides ++= Seq(
       "com.fasterxml.jackson.core"    % "jackson-databind" % Versions("jackson"),
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions(
