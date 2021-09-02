@@ -24,11 +24,12 @@ object Compiler {
 
   // scalastyle:off
   def compile(df: DataFrame, query: String, config: Config)(implicit
-      sc: SQLContext
+                                                            sc: SQLContext
   ): Result[DataFrame] =
-    compiler(df)
-      .run(query)
+    compiler
+      .run((query, df))
       .run(config, @@(df))
+      .right
       .map { case (log, _, df) =>
         Log.run(log)
         df
@@ -38,8 +39,8 @@ object Compiler {
   def explain(query: String)(implicit sc: SQLContext): Unit = {
     import sc.implicits._
     val df = List.empty[(String, String, String)].toDF("s", "p", "o")
-    compiler(df)
-      .run(query)
+    compiler
+      .run(query, df)
       .run(Config.default, @@(df)) match {
       case Left(x) => println(x)
       case Right((log, _, df)) =>
@@ -50,19 +51,58 @@ object Compiler {
 
   /** Put together all phases of the compiler
     *
-    * @param df
-    * @param sc
+    * =Architecture=
+    *
+    * {{{
+    * +---------+
+    * | parser  +---------+
+    * +---+-----+         |
+    *     |               |
+    * +---v-------------+ |
+    * |transformToGraph | |
+    * +---+-------------+ |
+    *     |               |
+    *     |               |
+    * +---v-------------+ |
+    * |staticAnalysis   | |
+    * +---+-------------+ |
+    *     |               |
+    *     |               |
+    * +---v---------------v-+
+    * |optimizer            |
+    * +---+-----------------+
+    *     |
+    *     |
+    *     | +---------------+
+    *     | |dataFrameTyper |
+    *     | +--------+------+
+    *     |          |
+    *     |          |
+    * +---v----------v------+
+    * |engine               |
+    * +---+-----------------+
+    *     |
+    *     |
+    *     |
+    * +---v---------+
+    * |rdfFormatter |
+    * +-------------+
+    * }}}
+    *
+    * @param sc Spark's [[SQLContext]], required for the engine to run
     * @return
     */
-  private def compiler(df: DataFrame)(implicit
-      sc: SQLContext
-  ): Phase[String, DataFrame] =
-    parser >>>
-      transformToGraph.first >>>
-      staticAnalysis.first >>>
-      optimizer >>>
-      engine(df) >>>
-      rdfFormatter
+  private def compiler[T: Basis[DAG, *]](implicit
+                                         sc: SQLContext
+                                        ): Phase[(String, DataFrame), DataFrame] = {
+    (parser
+      .andThen(transformToGraph.first[Graphs])
+      .andThen(staticAnalysis.first[Graphs])
+      .andThen(optimizer)).first[DataFrame]
+      .andThen(dataFrameTyper.second[T])
+      .andThen(engine[T])
+      .andThen(rdfFormatter)
+  }
 
   private def transformToGraph[T: Basis[DAG, *]]: Phase[Query, T] =
     Kleisli[M, Query, T] { query =>
@@ -83,10 +123,10 @@ object Compiler {
     * @param sc
     * @return
     */
-  private def engine[T: Basis[DAG, *]](df: DataFrame)(implicit
-      sc: SQLContext
-  ): Phase[T, DataFrame] =
-    Kleisli[M, T, DataFrame] { query =>
+  private def engine[T: Basis[DAG, *]](implicit
+                                       sc: SQLContext
+                                      ): Phase[(T, DataFrame), DataFrame] =
+    Kleisli[M, (T, DataFrame), DataFrame] { case (query, df) =>
       Log.info("Engine", "Running the engine") *>
         M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
           Engine.evaluate(df, query, config)
@@ -114,6 +154,15 @@ object Compiler {
       Log.info("RdfFormatter", "Running the RDF formatter") *>
         M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
           RdfFormatter.formatDataFrame(inDf, config)
+        }
+    }
+  }
+
+  private def dataFrameTyper: Phase[DataFrame, DataFrame] = {
+    Kleisli[M, DataFrame, DataFrame] { inDf =>
+      Log.info("DataFrameTyper", "Running the DataFrameTyper") *>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
+          DataFrameTyper.typeDataFrame(inDf, config)
         }
     }
   }
