@@ -40,7 +40,7 @@ class RdfFormatterSpec
       ("\"false\"^^xsd:boolean", "\"true\"^^xsd:boolean", "1")
     ).toDF("s", "p", "o")
 
-    val result = RdfFormatter.formatDataFrame(df, Config(true, true, true))
+    val result = RdfFormatter.formatDataFrame(df, Config(true, true, true, false))
 
     result.collect() shouldEqual expected.collect()
   }
