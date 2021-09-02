@@ -91,12 +91,12 @@ class BNodeSpec
       )
     }
 
-    "Generate a generic BNODE in the select clause with a specific label(input parameter) name" in {
+    "Generate a generic BNODE in the SELECT clause with a specific label(input parameter)SIMPLE LITERAL name " in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
           |
-          |SELECT BNODE("foo")
+          |SELECT BNODE("abc")
           |WHERE  {
           |   ?x foaf:name ?name .
           |}
@@ -110,7 +110,7 @@ class BNodeSpec
       )
     }
 
-    "Generate a generic BNODE in a BIND with a specefic label(input parameter) name" in {
+    "Generate a generic BNODE in a BIND with a specefic label(input parameter) VARIABLE name" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -118,7 +118,7 @@ class BNodeSpec
           |SELECT ?id
           |WHERE  {
           |   ?x foaf:name ?name .
-          |   bind(BNODE("foo") as ?id) .
+          |   bind(BNODE(?name) as ?id) .
           |}
           |""".stripMargin
 
@@ -130,7 +130,7 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with a specefic label different" in {
+    "Generate 2 BNODES with a specific SIMPLE LITERAL label DIFFERENT" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -151,7 +151,7 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with the same specefic label" in {
+    "Generate 2 BNODES with the same specific SIMPLE LITERAL label EQUAL" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -161,6 +161,48 @@ class BNodeSpec
           |   ?x foaf:name ?name .
           |   bind(BNODE("tomy") as ?id) .
           |   bind(BNODE("tomy") as ?id2)
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).equalTo(col("?id2"))),
+        query,
+        expected
+      )
+    }
+
+    "Generate 2 BNODES with a specific VARIABLE label DIFFERENT" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT ?id ?id2
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |   bind(BNODE(?x) as ?id) .
+          |   bind(BNODE(?name) as ?id2)
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).notEqual(col("?id2"))),
+        query,
+        expected
+      )
+    }
+
+    "Generate 2 BNODES with the same specific VARIABLE label EQUAL" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT ?id ?id2
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |   bind(BNODE(?x) as ?id) .
+          |   bind(BNODE(?x) as ?id2)
           |}
           |""".stripMargin
 
