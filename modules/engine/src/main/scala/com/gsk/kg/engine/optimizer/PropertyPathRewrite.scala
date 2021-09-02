@@ -21,7 +21,7 @@ import higherkindness.droste.prelude._
 
 object PropertyPathRewrite {
 
-  private def generateRndVariable =
+  private def generateRndVariable() =
     VARIABLE(s"?_${java.util.UUID.randomUUID().toString}")
 
   private def toRecursive[F[_]: Functor, R: Embed[F, *]](
@@ -38,35 +38,35 @@ object PropertyPathRewrite {
   def dagAlgebra[T](implicit basis: Basis[DAG, T]): CVAlgebra[DAG, T] =
     CVAlgebra {
       case Join(
-            lx :< Join(ll, _ :< Path(slr, pelr, _, glr)),
-            rx :< Path(_, per, or, gr)
-          ) =>
-        println(lx)
-        println(rx)
-        val rndVar = generateRndVariable
-        val lr     = pathR(slr, pelr, rndVar, glr)
-        val r      = pathR(rndVar, per, or, gr)
-//        val recll  = Attr.un(ll)._1
-        val newL: DAG[T] =
-          basis.coalgebra(lx).asInstanceOf[Join[T]].copy(r = lr)
-        val l   = basis.algebra(newL)
-        val res = joinR(l, r)
+      ll :< Join(_, _ :< Path(slr, pelr, _, glr)),
+      _ :< Path(_, per, or, gr)
+      ) =>
+        import com.gsk.kg.engine.optics._
+
+        val updater = _joinR
+          .composeLens(Join.r)
+          .composePrism(_pathR)
+          .composeLens(Path.o)
+
+        val rndVar = generateRndVariable()
+        val updatedLL = updater.modify(_ => rndVar)(ll)
+        val r = pathR(rndVar, per, or, gr)
+        val res = joinR(updatedLL, r)
         res
-//      case Join(
-//            _ :< Join(ll :< Join(lll, rrr), _ :< Path(slr, pelr, _, glr)),
-//            _ :< Path(_, per, or, gr)
-//          ) =>
-//        val rndVar = generateRndVariable
-//        val lr     = pathR(slr, pelr, rndVar, glr)
-//        val r      = pathR(rndVar, per, or, gr)
-//        val res    = joinR(joinR(ll, lr), r)
-//        res
+      //      case Join(
+      //            _ :< Join(ll :< Join(lll, rrr), _ :< Path(slr, pelr, _, glr)),
+      //            _ :< Path(_, per, or, gr)
+      //          ) =>
+      //        val rndVar = generateRndVariable
+      //        val lr     = pathR(slr, pelr, rndVar, glr)
+      //        val r      = pathR(rndVar, per, or, gr)
+      //        val res    = joinR(joinR(ll, lr), r)
+      //        res
       case Join(l :< Path(sl, pel, _, gl), r :< Path(_, per, or, gr)) =>
-        val rndVar = generateRndVariable
-        val res    = joinR(pathR(sl, pel, rndVar, gl), pathR(rndVar, per, or, gr))
-        res
-      case Path(s, p, o, g) =>
-        pathR(s, p, o, g)
+        val rndVar = generateRndVariable()
+        joinR(pathR(sl, pel, rndVar, gl), pathR(rndVar, per, or, gr))
+
+      case t => t.map(toRecursive(_)).embed
     }
 
   def peAlgebra[T](s: StringVal, o: StringVal, g: List[StringVal])(implicit
