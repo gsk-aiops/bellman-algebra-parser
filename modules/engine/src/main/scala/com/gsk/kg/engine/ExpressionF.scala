@@ -113,7 +113,7 @@ object ExpressionF {
   final case class SECONDS[A](e: A)                       extends ExpressionF[A]
   final case class TIMEZONE[A](e: A)                      extends ExpressionF[A]
   final case class TZ[A](e: A)                            extends ExpressionF[A]
-  final case class BNODE[A]()                             extends ExpressionF[A]
+  final case class BNODE[A](s :A)                         extends ExpressionF[A]
 
   val fromExpressionCoalg: Coalgebra[ExpressionF, Expression] =
     Coalgebra {
@@ -230,7 +230,7 @@ object ExpressionF {
       case DateTimeFunc.SECONDS(s)                     => SECONDS(s)
       case DateTimeFunc.TIMEZONE(s)                    => TIMEZONE(s)
       case DateTimeFunc.TZ(s)                          => TZ(s)
-      case BuiltInFunc.BNODE()                         => BNODE()
+      case BuiltInFunc.BNODE(s)                         => BNODE(s)
     }
 
   val toExpressionAlgebra: Algebra[ExpressionF, Expression] =
@@ -371,7 +371,7 @@ object ExpressionF {
       case SECONDS(s)                 => DateTimeFunc.SECONDS(s)
       case TIMEZONE(s)                => DateTimeFunc.TIMEZONE(s)
       case TZ(s)                      => DateTimeFunc.TZ(s)
-      case BNODE()                    => BuiltInFunc.BNODE()
+      case BNODE(s)                   => BuiltInFunc.BNODE(s.asInstanceOf[StringLike])
     }
 
   implicit val basis: Basis[ExpressionF, Expression] =
@@ -469,7 +469,7 @@ object ExpressionF {
         case SECONDS(s)  => FuncDates.seconds(s).pure[M]
         case TIMEZONE(s) => FuncDates.timezone(s).pure[M]
         case TZ(s)       => FuncDates.tz(s).pure[M]
-        case BNODE()     => FuncTerms.bNode.pure[M]
+        case BNODE(s)     => FuncTerms.bNode(s).pure[M]
       }
     // scalastyle:on
 

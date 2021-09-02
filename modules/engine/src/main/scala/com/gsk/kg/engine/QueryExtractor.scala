@@ -290,7 +290,7 @@ object QueryExtractor {
       case SECONDS(e)                      => s"(seconds $e)"
       case TIMEZONE(e)                     => s"(timezone $e)"
       case TZ(e)                           => s"(tz $e)"
-      case BNODE()                         => "(bnode)"
+      case BNODE(s)                        => s"(bnode $s)"
     }
 
   private val exprToString: Algebra[ExprF, String] =

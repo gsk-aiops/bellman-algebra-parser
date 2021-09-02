@@ -1,13 +1,16 @@
 package com.gsk.kg.engine.compiler
 
-import com.gsk.kg.sparqlparser.TestConfig
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.{DataFrame, Row}
+
+import com.gsk.kg.sparqlparser.TestConfig
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class BNodeSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with SparkSpec
     with TestConfig {
@@ -23,7 +26,7 @@ class BNodeSpec
   val uuidRegex =
     "_:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 
-  val expected         = (1 to 3).map(_ => Row(true)).toList
+  val expected = (1 to 3).map(_ => Row(true)).toList
 
   "perform query with BNODE function" should {
 
@@ -55,6 +58,7 @@ class BNodeSpec
           |WHERE  {
           |   ?x foaf:name ?name .
           |   bind(BNODE() as ?id)
+          |
           |}
           |""".stripMargin
 

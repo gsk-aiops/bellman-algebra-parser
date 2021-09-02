@@ -291,11 +291,44 @@ class FuncTermsSpec
 
         val bnodeRegexColName = "bnodeR"
 
-        val uuidRegex = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        val uuidRegex =
+          "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 
-        df.select(FuncTerms.bNode
-          .rlike(uuidRegex)
-          .as(bnodeRegexColName)).collect() shouldEqual Array(Row(true))
+        df.select(
+          FuncTerms.bNode("")
+            .rlike(uuidRegex)
+            .as(bnodeRegexColName)
+        ).collect() shouldEqual Array(Row(true))
+      }
+
+      "compare two blank node column with a a generic name and are diferents" in {
+        val df = List(
+          "foo"
+        ).toDF("fooColumn")
+
+        df.select(
+          FuncTerms.bNode("").equalTo(FuncTerms.bNode(""))
+        ).collect() shouldEqual Array(Row(false))
+      }
+
+      "compare two blank node column with diferentes names and are diferents" in {
+        val df = List(
+          "foo"
+        ).toDF("fooColumn")
+
+        df.select(
+          FuncTerms.bNode("tomas").equalTo(FuncTerms.bNode("tomy"))
+        ).collect() shouldEqual Array(Row(false))
+      }
+
+      "compare two blank node column with a a same name and are equals" in {
+        val df = List(
+          "foo"
+        ).toDF("fooColumn")
+
+        df.select(
+          FuncTerms.bNode("tomy").equalTo(FuncTerms.bNode("tomy"))
+        ).collect() shouldEqual Array(Row(true))
       }
     }
   }
