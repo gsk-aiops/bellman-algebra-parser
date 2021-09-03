@@ -17,9 +17,13 @@ object RdfFormatter {
     * @return
     */
   def formatDataFrame(df: DataFrame, config: Config): DataFrame = {
-    val formatted = if (config.formatRdfOutput) {
+    val formatted = if (config.formatRdfOutput && !config.typeDataframe) {
       df.columns.foldLeft(df) { (d, column) =>
         d.withColumn(column, format(col(column)))
+      }
+    } else if (config.formatRdfOutput && config.typeDataframe) {
+      df.columns.foldLeft(df) { (d, column) =>
+        d.withColumn(column, prettyPrintTypedColumn(col(column)))
       }
     } else {
       df
@@ -31,6 +35,45 @@ object RdfFormatter {
       formatted
     }
   }
+
+  def prettyPrintTypedColumn(col: Column): Column =
+    when(
+      col("type") === RdfType.Uri.repr,
+      concat(
+        lit(Tokens.openAngleBracket),
+        col("value"),
+        lit(Tokens.closingAngleBracket)
+      )
+    ).when(
+      col("type") === RdfType.String.repr && col("lang").isNotNull,
+      concat(
+        lit(Tokens.doubleQuote),
+        col("value"),
+        lit(Tokens.doubleQuote),
+        lit(Tokens.langAnnotation),
+        col("lang")
+      )
+    ).when(
+      col("type") === RdfType.String.repr && isNull(col("lang")),
+      concat(
+        lit(Tokens.doubleQuote),
+        col("value"),
+        lit(Tokens.doubleQuote)
+      )
+    ).when(
+      col("type") === RdfType.Blank.repr,
+      concat(lit(Tokens.blankNode), col("value"))
+    ).otherwise(
+      concat(
+        lit(Tokens.doubleQuote),
+        col("value"),
+        lit(Tokens.doubleQuote),
+        lit(Tokens.typeAnnotation),
+        lit(Tokens.openAngleBracket),
+        lit(col("type")),
+        lit(Tokens.closingAngleBracket)
+      )
+    )
 
   private def removeDataFrameColumnsQuestionMarks(df: DataFrame): DataFrame = {
     df.columns.foldLeft(df) { case (acc, column) =>
