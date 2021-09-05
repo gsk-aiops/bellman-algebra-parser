@@ -134,7 +134,7 @@ WHERE {
     }
 
     "work correctly when more than one FROM statement appears" in {
-      val query  = """
+      val query = """
         | PREFIX  dm:   <http://gsk-kg.rdip.gsk.com/dm/1.0/>
         | CONSTRUCT {
         |   ?te dm:contains ?docid .

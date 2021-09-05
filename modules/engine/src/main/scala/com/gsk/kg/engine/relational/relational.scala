@@ -66,11 +66,12 @@ trait RelationalInstances {
 
   import Relational._
 
-  /** [[Relational]] implementation for untyped dataframes.  In our case,
-    * untyped dataframes means dataframes with [[org.apache.spark.sql.types.StringType]]
+  /** [[Relational]] implementation for untyped dataframes. In our case, untyped
+    * dataframes means dataframes with [[org.apache.spark.sql.types.StringType]]
     * columns, instead of [[org.apache.spark.sql.types.StructType]].
     *
-    * @param sc a SQLContext for low level Spark operations
+    * @param sc
+    *   a SQLContext for low level Spark operations
     * @return
     */
   implicit val untypedDataFrameRelational: Relational[DataFrame @@ Untyped] =
@@ -260,11 +261,12 @@ trait RelationalInstances {
     }
 }
 
-/** types of the RelationalGrouped typeclass can be grouped in a relational fashion.
-  * RelationalGrouped uses an associated type B for the return type of the groupBy operation.
+/** types of the RelationalGrouped typeclass can be grouped in a relational
+  * fashion. RelationalGrouped uses an associated type B for the return type of
+  * the groupBy operation.
   *
-  * Since it uses a functional dependency, it's easier to use the [[RelationalGrouped.Aux]] type
-  * for type hinting.
+  * Since it uses a functional dependency, it's easier to use the
+  * [[RelationalGrouped.Aux]] type for type hinting.
   *
   * {{{
   * def df[A: Relational]: Relational[A] = ???

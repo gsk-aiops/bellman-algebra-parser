@@ -26,7 +26,8 @@ import reftree.render.AnimationOptions
 import reftree.render.Renderer
 import reftree.render.RenderingOptions
 
-/** This object generates all the diagrams and animations we have in our documentation.
+/** This object generates all the diagrams and animations we have in our
+  * documentation.
   */
 object Animations extends App {
 

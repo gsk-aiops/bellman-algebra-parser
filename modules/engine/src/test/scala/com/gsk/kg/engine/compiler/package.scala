@@ -21,7 +21,7 @@ package object compiler {
     import scala.collection.JavaConverters._
     import sc.implicits._
 
-    val filename                            = s"modules/engine/src/test/resources/$path"
+    val filename = s"modules/engine/src/test/resources/$path"
     val inputStream: CollectorStreamTriples = new CollectorStreamTriples()
     RDFParser.source(filename).parse(inputStream)
 
@@ -49,18 +49,19 @@ package object compiler {
 
     /** This method is used by various tests to evaluate a query and check if
       * the result is equal to the expected data
-      * @param df dataframe
-      * @param projection function that is applied after executing the query
+      * @param df
+      *   dataframe
+      * @param projection
+      *   function that is applied after executing the query
       * @param query
-      * @param expected List with the data is expected
-      * @return Assertion, success or fail
-      *         p.e. To evaluate if uuid() return a valid UUID
-      *         eval(
-      *           List(("_:a", "<http://xmlns.com/foaf/0.1/name>", "Alice")).toDF("s", "p", "o"),
-      *           Some(col(Evaluation.renamedColumn).rlike(uuidRegex)),
-      *           "select uuid() where {?x foaf:name ?name}",
-      *           List(Row(true))
-      *         )
+      * @param expected
+      *   List with the data is expected
+      * @return
+      *   Assertion, success or fail p.e. To evaluate if uuid() return a valid
+      *   UUID eval( List(("_:a", "<http://xmlns.com/foaf/0.1/name>",
+      *   "Alice")).toDF("s", "p", "o"),
+      *   Some(col(Evaluation.renamedColumn).rlike(uuidRegex)), "select uuid()
+      *   where {?x foaf:name ?name}", List(Row(true)) )
       */
     def eval(
         df: DataFrame,

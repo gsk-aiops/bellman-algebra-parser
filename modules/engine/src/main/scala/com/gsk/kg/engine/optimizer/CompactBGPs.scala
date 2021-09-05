@@ -9,10 +9,10 @@ import com.gsk.kg.engine.DAG._
 import com.gsk.kg.engine.data.ToTree._
 import com.gsk.kg.sparqlparser.Expr
 
-/** The idea behind this optimization step is to compact BGPs into
-  * smaller number of chunks, so that when we query the DataFrame in
-  * the [[Engine]], a smaller number of queries is done (number of
-  * queries is 1 per [[ChunkedList.Chunk]]).
+/** The idea behind this optimization step is to compact BGPs into smaller
+  * number of chunks, so that when we query the DataFrame in the [[Engine]], a
+  * smaller number of queries is done (number of queries is 1 per
+  * [[ChunkedList.Chunk]]).
   *
   * Given an initial BGP like this:
   *
@@ -24,9 +24,9 @@ import com.gsk.kg.sparqlparser.Expr
   * Which is represented as this DAG tree:
   *
   * {{{
-  *  BGP
-  *  |
-  *  `- ChunkedList.Node
+  *   BGP
+  *   |
+  *   `- ChunkedList.Node
   *     |
   *     +- NonEmptyChain
   *     |  |
@@ -39,8 +39,8 @@ import com.gsk.kg.sparqlparser.Expr
   *     |     `- http://qwer.com
   *     |
   *     `- NonEmptyChain
-  *        |
-  *        `- Triple
+  *         |
+  *         `- Triple
   *           |
   *           +- ?d
   *           |
@@ -56,8 +56,8 @@ import com.gsk.kg.sparqlparser.Expr
   * BGP
   * |
   * `- ChunkedList.Node
-  *    |
-  *    `- NonEmptyChain
+  *     |
+  *     `- NonEmptyChain
   *       |
   *       +- Triple
   *       |  |
@@ -68,12 +68,12 @@ import com.gsk.kg.sparqlparser.Expr
   *       |  `- http://test.com
   *       |
   *       `- Triple
-  *          |
-  *          +- ?d
-  *          |
-  *          +- http://qwer.com
-  *          |
-  *          `- http://qwer.com
+  *           |
+  *           +- ?d
+  *           |
+  *           +- http://qwer.com
+  *           |
+  *           `- http://qwer.com
   * }}}
   */
 object CompactBGPs {
@@ -81,9 +81,9 @@ object CompactBGPs {
   def apply[T](implicit T: Basis[DAG, T]): T => T = { t =>
     T.coalgebra(t).rewrite { case x @ BGP(triples) =>
       BGP(
-        triples.compact({ case t @ Expr.Quad(_, _, _, _) =>
+        triples.compact { case t @ Expr.Quad(_, _, _, _) =>
           t.getNamesAndPositions.map(x => x._2 + "->" + x._1.s).mkString(";")
-        })
+        }
       )
     }
   }

@@ -8,8 +8,8 @@ import higherkindness.droste.Basis
 import com.gsk.kg.engine.DAG._
 import com.gsk.kg.engine.data.ToTree._
 
-/** This optimization removes nested [[Project]] from the [[DAG]] when
-  * they are consecutive and bind the same variables.
+/** This optimization removes nested [[Project]] from the [[DAG]] when they are
+  * consecutive and bind the same variables.
   *
   * In an initial construction of the [[DAG]], a query like this:
   *
@@ -30,65 +30,54 @@ import com.gsk.kg.engine.data.ToTree._
   * Project
   * |
   * +- List(VARIABLE(?d))
+  * | `- Project
   * |
-  * `- Project
-  *    |
-  *    +- List(VARIABLE(?d))
-  *    |
-  *    `- BGP
-  *       |
-  *       `- ChunkedList.Node
-  *          |
-  *          +- NonEmptyChain
-  *          |  |
-  *          |  `- Triple
-  *          |     |
-  *          |     +- ?d
-  *          |     |
-  *          |     +- http://gsk-kg.rdip.gsk.com/dm/1.0/source
-  *          |     |
-  *          |     `- potato
-  *          |
-  *          `- NonEmptyChain
-  *             |
-  *             `- Triple
-  *                |
-  *                +- ?d
-  *                |
-  *                +- http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-  *                |
-  *                `- http://gsk-kg.rdip.gsk.com/dm/1.0/Document
+  * +- List(VARIABLE(?d))
+  * | `- BGP
+  * | `- ChunkedList.Node
+  * |
+  * +- NonEmptyChain
+  * | |
+  * | `- Triple
+  * | |
+  * | +- ?d
+  * | |
+  * | +- http://gsk-kg.rdip.gsk.com/dm/1.0/source
+  * | |
+  * | `- potato
+  * | `- NonEmptyChain
+  * | `- Triple
+  * |
+  * +- ?d
+  * |
+  * +- http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+  * | `- http://gsk-kg.rdip.gsk.com/dm/1.0/Document
   *
-  * After this optimization pass, though, we convert it to a more
-  * compact step like this (notice the [[DAG.Project]] deduplication):
+  * After this optimization pass, though, we convert it to a more compact step
+  * like this (notice the [[DAG.Project]] deduplication):
   *
   * Project
   * |
   * +- List(VARIABLE(?d))
+  * | `- BGP
+  * | `- ChunkedList.Node
   * |
-  * `- BGP
-  *    |
-  *    `- ChunkedList.Node
-  *       |
-  *       +- NonEmptyChain
-  *       |  |
-  *       |  `- Triple
-  *       |     |
-  *       |     +- ?d
-  *       |     |
-  *       |     +- http://gsk-kg.rdip.gsk.com/dm/1.0/source
-  *       |     |
-  *       |     `- potato
-  *       |
-  *       `- NonEmptyChain
-  *          |
-  *          `- Triple
-  *             |
-  *             +- ?d
-  *             |
-  *             +- http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-  *             |
-  *             `- http://gsk-kg.rdip.gsk.com/dm/1.0/Document
+  * +- NonEmptyChain
+  * | |
+  * | `- Triple
+  * | |
+  * | +- ?d
+  * | |
+  * | +- http://gsk-kg.rdip.gsk.com/dm/1.0/source
+  * | |
+  * | `- potato
+  * | `- NonEmptyChain
+  * | `- Triple
+  * |
+  * +- ?d
+  * |
+  * +- http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+  * | `- http://gsk-kg.rdip.gsk.com/dm/1.0/Document
   */
 object RemoveNestedProject {
 
