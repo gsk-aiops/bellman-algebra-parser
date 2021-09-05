@@ -13,9 +13,10 @@ object FuncDates {
 
   private val Seconds = 5
 
-  /** Returns an XSD dateTime value for the current query execution. All calls to this function in any one query
-    * execution must return the same value. The exact moment returned is not specified.
-    * e.g. "2011-01-10T14:45:13.815-05:00"^^xsd:dateTime
+  /** Returns an XSD dateTime value for the current query execution. All calls
+    * to this function in any one query execution must return the same value.
+    * The exact moment returned is not specified. e.g.
+    * "2011-01-10T14:45:13.815-05:00"^^xsd:dateTime
     * @return
     */
   def now: Column = {
@@ -43,8 +44,8 @@ object FuncDates {
     */
   def day(col: Column): Column = apply(dayofmonth, col)
 
-  /** Returns the hours part of arg as an integer.
-    * The value is as given in the lexical form of the XSD dateTime.
+  /** Returns the hours part of arg as an integer. The value is as given in the
+    * lexical form of the XSD dateTime.
     * @param col
     * @return
     */
@@ -53,8 +54,8 @@ object FuncDates {
     getTimeFromDateTimeCol(col, Hours)
   }
 
-  /** Returns the minutes part of the lexical form of arg.
-    * The value is as given in the lexical form of the XSD dateTime.
+  /** Returns the minutes part of the lexical form of arg. The value is as given
+    * in the lexical form of the XSD dateTime.
     * @param col
     * @return
     */
@@ -70,8 +71,8 @@ object FuncDates {
   def seconds(col: Column): Column =
     getTimeFromDateTimeCol(col, Seconds)
 
-  /** Returns the timezone part of arg as an xsd:dayTimeDuration.
-    * Raises an error if there is no timezone.
+  /** Returns the timezone part of arg as an xsd:dayTimeDuration. Raises an
+    * error if there is no timezone.
     * @param col
     * @return
     */
@@ -99,8 +100,8 @@ object FuncDates {
       )
   }
 
-  /** Returns the timezone part of arg as a simple literal.
-    * Returns the empty string if there is no timezone.
+  /** Returns the timezone part of arg as a simple literal. Returns the empty
+    * string if there is no timezone.
     * @param col
     * @return
     */
@@ -113,7 +114,8 @@ object FuncDates {
   /** Check if col is a xsd:dateTime type and apply function in case true
     * @param f
     * @param col
-    * @return f(col) or lit(null) if col isn't xsd:dateTime type
+    * @return
+    *   f(col) or lit(null) if col isn't xsd:dateTime type
     */
   private def apply(f: Column => Column, col: Column): Column =
     when(
@@ -124,9 +126,9 @@ object FuncDates {
   /** Get hours, minutes of dateTime column
     * @param col
     * @param pos
-    * @return Column with
-    *         Integer if hours or minutes
-    * usage: getTimeFromDateTimeCol(2011-01-10T14:45:13.815-05:29, 3) = 14
+    * @return
+    *   Column with Integer if hours or minutes usage:
+    *   getTimeFromDateTimeCol(2011-01-10T14:45:13.815-05:29, 3) = 14
     */
   private def getTimeFromDateTimeCol(col: Column, pos: Int): Column = {
     val dateTimeRegex: String =
@@ -151,11 +153,10 @@ object FuncDates {
 
   /** Get timezone of a datetime input in multiples formats
     * @param col
-    * @return timezone formatted
-    *         usage
-    *         getTimeZoneComponents(2020-12-09T01:50:24.888Z) = Z
-    *         getTimeZoneComponents(2011-01-10T14:45:13.815-05:29) = -05:29
-    *         getTimeZoneComponents(2011-01-10T14:45:13.815+05:09) = 05:29
+    * @return
+    *   timezone formatted usage getTimeZoneComponents(2020-12-09T01:50:24.888Z)
+    *   = Z getTimeZoneComponents(2011-01-10T14:45:13.815-05:29) = -05:29
+    *   getTimeZoneComponents(2011-01-10T14:45:13.815+05:09) = 05:29
     */
   private def getTimeZoneComponents(col: Column): Column = {
     val dateTimeWithTimeZoneRegex: String =
@@ -208,10 +209,10 @@ object FuncDates {
     * @param PosSignOpt
     * @param PosHours
     * @param PosMinutes
-    * @return timezone formatted
-    *         usage
-    *         buildTimeZone(-05:29) = "\"-PT5H29M\"^^xsd:dateTime"
-    *         buildTimeZone(05:00)  = "\"PT5H\"^^xsd:dateTime"
+    * @return
+    *   timezone formatted usage buildTimeZone(-05:29) =
+    *   "\"-PT5H29M\"^^xsd:dateTime" buildTimeZone(05:00) =
+    *   "\"PT5H\"^^xsd:dateTime"
     */
   private def buildTimeZone(
       timeZone: Column,

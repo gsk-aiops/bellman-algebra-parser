@@ -55,7 +55,7 @@ inThisBuild(
 )
 
 lazy val buildSettings = Seq(
-  scalaVersion := Versions("scala211"),
+  scalaVersion       := Versions("scala211"),
   crossScalaVersions := List(Versions("scala211"), Versions("scala212")),
   sonatypeProjectHosting := Some(
     GitHubHosting(
@@ -72,10 +72,10 @@ lazy val buildSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish := {},
-  publishLocal := {},
+  publish         := {},
+  publishLocal    := {},
   publishArtifact := false,
-  publish / skip := true
+  publish / skip  := true
 )
 
 lazy val compilerPlugins = Seq(
@@ -130,16 +130,16 @@ lazy val `bellman-spark-engine` = project
   .settings(Test / fork := true)
   .settings(
     libraryDependencies ++= Seq(
-      "io.verizon.quiver"          %% "core"         % Versions("quiver"),
-      "org.apache.spark"           %% "spark-sql"    % Versions("spark") % Provided,
-      "com.github.julien-truffaut" %% "monocle-core" % Versions("monocle"),
-      "org.typelevel"              %% "simulacrum"   % Versions("simulacrum"),
+      "io.verizon.quiver" %% "core"      % Versions("quiver"),
+      "org.apache.spark"  %% "spark-sql" % Versions("spark") % Provided,
+      "com.github.julien-truffaut" %% "monocle-core"  % Versions("monocle"),
+      "org.typelevel"              %% "simulacrum"    % Versions("simulacrum"),
       "com.github.julien-truffaut" %% "monocle-macro" % Versions("monocle"),
       "com.github.julien-truffaut" %% "monocle-law" % Versions(
         "monocle"
       )                 % Test,
-      "com.codecommit" %% "shims" % Versions("shims") % Test,
-      "org.typelevel"  %% "cats-laws" % Versions("cats") % Test,
+      "com.codecommit" %% "shims"           % Versions("shims")      % Test,
+      "org.typelevel"  %% "cats-laws"       % Versions("cats")       % Test,
       "org.typelevel"  %% "discipline-core" % Versions("discipline") % Test,
       "org.typelevel"  %% "discipline-scalatest" % Versions(
         "discipline-scalatest"
@@ -156,7 +156,7 @@ lazy val `bellman-spark-engine` = project
       ) % Test
     ),
     dependencyOverrides ++= Seq(
-      "com.fasterxml.jackson.core"    % "jackson-databind" % Versions("jackson"),
+      "com.fasterxml.jackson.core" % "jackson-databind" % Versions("jackson"),
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions(
         "jackson"
       )
@@ -256,20 +256,20 @@ lazy val `bellman-site` = project
   .settings(commonDependencies)
   .settings(compilerPlugins)
   .settings(
-    micrositeName := "Bellman",
+    micrositeName        := "Bellman",
     micrositeDescription := "Efficiently running SparQL queries in Spark",
     micrositeGithubOwner := "gsk-aiops",
-    micrositeGithubRepo := "bellman",
+    micrositeGithubRepo  := "bellman",
     micrositeOrganizationHomepage := "https://www.gsk.com",
-    micrositeBaseUrl := "bellman",
-    micrositeDocumentationUrl := "docs/compilation",
-    micrositeGitterChannel := false,
-    micrositePushSiteWith := GitHub4s,
-    mdocIn := (Compile / sourceDirectory).value / "docs",
+    micrositeBaseUrl              := "bellman",
+    micrositeDocumentationUrl     := "docs/compilation",
+    micrositeGitterChannel        := false,
+    micrositePushSiteWith         := GitHub4s,
+    mdocIn                        := (Compile / sourceDirectory).value / "docs",
     micrositeGithubToken := Option(System.getenv().get("GITHUB_TOKEN")),
     micrositeImgDirectory := (Compile / resourceDirectory).value / "site" / "images" / "overview",
     micrositeHighlightTheme := "tomorrow",
-    micrositeTheme := "light",
+    micrositeTheme          := "light",
     micrositePalette := Map(
       "brand-primary"   -> "#868b8e",
       "brand-secondary" -> "#b9b7bd",
@@ -306,7 +306,7 @@ lazy val `bellman-rdf-tests` = project
       "org.scalacheck" %% "scalacheck" % Versions("scalacheck") % Test
     ),
     dependencyOverrides ++= Seq(
-      "com.fasterxml.jackson.core"    % "jackson-databind" % Versions("jackson"),
+      "com.fasterxml.jackson.core" % "jackson-databind" % Versions("jackson"),
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions(
         "jackson"
       )

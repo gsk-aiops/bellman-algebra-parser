@@ -298,11 +298,11 @@ object QueryExtractor {
         s"(extend ((${bindTo.s} ${printExpression(bindFrom)})) $r)"
       case FilteredLeftJoinF(l, r, f) =>
         s"(optional $l $r (filter ${f.map(printExpression).mkString(", ")}))"
-      case UnionF(l, r)          => s"(union $l $r)"
-      case SequenceF(bps)        => s"(sequence ${bps.mkString("\n")})"
-      case BGPF(quads)           => "(bgp " ++ quads.map(printQuad).mkString("\n") ++ ")"
-      case GraphF(g, e)          => s"(graph <${getCleanUri(g)}> $e)"
-      case JoinF(l, r)           => s"(join $l $r)"
+      case UnionF(l, r)   => s"(union $l $r)"
+      case SequenceF(bps) => s"(sequence ${bps.mkString("\n")})"
+      case BGPF(quads)  => "(bgp " ++ quads.map(printQuad).mkString("\n") ++ ")"
+      case GraphF(g, e) => s"(graph <${getCleanUri(g)}> $e)"
+      case JoinF(l, r)  => s"(join $l $r)"
       case LeftJoinF(l, r)       => s"(leftjoin $l $r)"
       case ProjectF(vars, r)     => r
       case PathF(s, p, o, g)     => printPath(s, p, o, g)

@@ -789,7 +789,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -812,7 +812,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -847,7 +847,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -882,7 +882,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -917,7 +917,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -964,7 +964,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -1011,7 +1011,7 @@ class FuncArithmeticSpec
             "expected"
           )
 
-          val result   = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
+          val result = df.select(FuncArithmetics.divide(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()

@@ -2,7 +2,8 @@ package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.StringVal.URIVAL
 
-/** @see Model after [[https://www.w3.org/TR/sparql11-query/#rExpression]]
+/** @see
+  *   Model after [[https://www.w3.org/TR/sparql11-query/#rExpression]]
   */
 sealed trait Expression
 
