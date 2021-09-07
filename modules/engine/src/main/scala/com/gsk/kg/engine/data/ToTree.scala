@@ -10,12 +10,12 @@ import higherkindness.droste.Algebra
 import higherkindness.droste.Basis
 import higherkindness.droste.scheme
 
+import com.gsk.kg.engine.PropertyExpressionF._
 import com.gsk.kg.sparqlparser.ConditionOrder
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr
 import com.gsk.kg.sparqlparser.Expression
-import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
 
 import scala.collection.immutable.Nil
 
@@ -127,7 +127,6 @@ object ToTree extends LowPriorityToTreeInstances0 {
             Node("Table", Stream(v.toTree, rs.toTree))
           case DAG.Exists(not, p, r) => Node("Exists", Stream(not.toTree, p, r))
           case DAG.Noop(str)         => Leaf(s"Noop($str)")
-          case DAG.Wrap(pe)          => Leaf(s"Wrap($pe)")
         }
 
         val t = scheme.cata(alg)

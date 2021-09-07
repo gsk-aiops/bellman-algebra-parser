@@ -1,10 +1,6 @@
 package com.gsk.kg.sparqlparser
 
-import cats.implicits._
-import higherkindness.droste.Embed
-import higherkindness.droste.macros.deriveFixedPoint
-
-@deriveFixedPoint trait PropertyExpression
+trait PropertyExpression
 
 object PropertyExpression {
   final case class Alternative(pel: PropertyExpression, per: PropertyExpression)

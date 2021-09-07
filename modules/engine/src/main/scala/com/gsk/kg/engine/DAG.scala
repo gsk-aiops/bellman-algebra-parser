@@ -55,7 +55,7 @@ object DAG {
       p: PropertyExpression,
       o: StringVal,
       g: List[StringVal],
-      reverse: Boolean = false
+      reverse: Boolean
   )                                                              extends DAG[A]
   @Lenses final case class BGP[A](quads: ChunkedList[Expr.Quad]) extends DAG[A]
   @Lenses final case class LeftJoin[A](l: A, r: A, filters: List[Expression])
@@ -80,7 +80,6 @@ object DAG {
       extends DAG[A]
   @Lenses final case class Exists[A](not: Boolean, p: A, r: A) extends DAG[A]
   @Lenses final case class Noop[A](trace: String)              extends DAG[A]
-  @Lenses final case class Wrap[A](p: PropertyExpression) extends DAG[A]
 
   implicit val traverse: Traverse[DAG] = new DefaultTraverse[DAG] {
     def traverse[G[_]: Applicative, A, B](fa: DAG[A])(f: A => G[B]): G[DAG[B]] =
@@ -94,8 +93,9 @@ object DAG {
           f(r).map(bind(variable, expression, _))
         case DAG.Sequence(bps) =>
           bps.map(f).sequence.map(DAG.sequence)
-        case DAG.Path(s, p, o, g, reverse) => path[B](s, p, o, g, reverse).pure[G]
-        case DAG.BGP(quads)       => bgp[B](quads).pure[G]
+        case DAG.Path(s, p, o, g, reverse) =>
+          path[B](s, p, o, g, reverse).pure[G]
+        case DAG.BGP(quads) => bgp[B](quads).pure[G]
         case DAG.LeftJoin(l, r, filters) =>
           (
             f(l),
@@ -117,7 +117,6 @@ object DAG {
         case DAG.Table(vars, rows)    => table[B](vars, rows).pure[G]
         case DAG.Exists(not, p, r)    => (f(p), f(r)).mapN(DAG.exists(not, _, _))
         case DAG.Noop(str)            => noop[B](str).pure[G]
-        case DAG.Wrap(p)              => wrap(p).pure[G]
       }
   }
 
@@ -136,7 +135,7 @@ object DAG {
       p: PropertyExpression,
       o: StringVal,
       g: List[StringVal],
-      reverse: Boolean = false
+      reverse: Boolean
   ): DAG[A] =
     Path(s, p, o, g, reverse)
   def bgp[A](quads: ChunkedList[Expr.Quad]): DAG[A] = BGP[A](quads)
@@ -166,7 +165,6 @@ object DAG {
   def exists[A](not: Boolean, p: A, r: A): DAG[A] =
     Exists[A](not, p, r)
   def noop[A](trace: String): DAG[A] = Noop[A](trace)
-  def wrap[A](pe: PropertyExpression): DAG[A] = Wrap[A](pe)
 
   // Smart constructors for building the recursive version directly
   def describeR[T: Embed[DAG, *]](vars: List[StringVal], r: T): T =
@@ -190,7 +188,7 @@ object DAG {
       p: PropertyExpression,
       o: StringVal,
       g: List[StringVal],
-      reverse: Boolean = false
+      reverse: Boolean
   ): T =
     path[T](s, p, o, g, reverse).embed
   def bgpR[T: Embed[DAG, *]](triples: ChunkedList[Expr.Quad]): T =
@@ -229,7 +227,6 @@ object DAG {
   def existsR[T: Embed[DAG, *]](not: Boolean, p: T, r: T): T =
     exists[T](not, p, r).embed
   def noopR[T: Embed[DAG, *]](trace: String): T = noop[T](trace).embed
-  def wrapR[T: Embed[DAG, *]](pe: PropertyExpression): T = wrap[T](pe).embed
 
   /** Transform a [[Query]] into its [[Fix[DAG]]] representation
     *

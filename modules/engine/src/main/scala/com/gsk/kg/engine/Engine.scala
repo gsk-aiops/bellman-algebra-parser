@@ -70,7 +70,6 @@ object Engine {
       case DAG.Table(vars, rows)       => evaluateTable(vars, rows)
       case DAG.Exists(not, p, r)       => evaluateExists(not, p, r)
       case DAG.Noop(str)               => evaluateNoop(str)
-      case DAG.Wrap(p)                 => evaluateNoop("")
     }
 
   def evaluate[T: Basis[DAG, *]](

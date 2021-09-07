@@ -181,174 +181,1195 @@ class PropertyPathsSpec
 
       "sequence / property path" when {
 
-        "no reversed" in {
+        "two seq URIs chained" when {
 
-          val df = List(
-            (
-              "<http://example.org/Alice>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
-            ),
-            (
-              "<http://example.org/Bob>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+          "no reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s foaf:knows/foaf:name ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Bob>", "\"Charles\"")
             )
-          ).toDF("s", "p", "o")
+          }
 
-          val query =
-            """
-              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-              |
-              |SELECT ?s ?o
-              |WHERE {
-              | ?s foaf:knows/foaf:name ?o .
-              |}
-              |""".stripMargin
+          "first reversed" in {
 
-          val result = Compiler.compile(df, query, config)
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
 
-          result.right.get.collect.toSet shouldEqual Set(
-            Row("<http://example.org/Bob>", "\"Charles\"")
-          )
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Daniel>", "\"Charles\"")
+            )
+          }
+
+          "second reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:knows) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+              Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+              Row(
+                "<http://example.org/Charles>",
+                "<http://example.org/Charles>"
+              )
+            )
+          }
+
+          "all reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "\"Charles\"",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Bob>", "\"Charles\""),
+              Row("<http://example.org/Daniel>", "\"Charles\"")
+            )
+          }
         }
 
-        "left reversed" in {
+        "three seq URIs chained" when {
 
-          val df = List(
-            (
-              "<http://example.org/Alice>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
-            ),
-            (
-              "<http://example.org/Bob>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+          "no reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s foaf:knows/foaf:friend/foaf:name ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
             )
-          ).toDF("s", "p", "o")
+          }
 
-          val query =
-            """
-              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-              |
-              |SELECT ?s ?o
-              |WHERE {
-              | ?s (^foaf:knows/foaf:name) ?o .
-              |}
-              |""".stripMargin
+          "first reversed" in {
 
-          val result = Compiler.compile(df, query, config)
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
 
-          result.right.get.collect.toSet shouldEqual Set(
-            Row("<http://example.org/Daniel>", "\"Charles\"")
-          )
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "second reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "\"Charles\"",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/foaf:friend/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "first and second reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:friend/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "first and third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "\"Charles\"",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "second and third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "\"Charles\"",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
+
+          "all reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "\"Charles\"",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s ^(foaf:knows/foaf:friend/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "\"Charles\"")
+            )
+          }
         }
 
-        "right reversed" in {
+        "four seq URIs chained" when {
 
-          val df = List(
-            (
-              "<http://example.org/Alice>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
-            ),
-            (
-              "<http://example.org/Bob>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+          "no reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s foaf:knows/foaf:friend/foaf:parent/foaf:employee ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
             )
-          ).toDF("s", "p", "o")
+          }
 
-          val query =
-            """
-              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-              |
-              |SELECT ?s ?o
-              |WHERE {
-              | ?s (foaf:knows/^foaf:knows) ?o .
-              |}
-              |""".stripMargin
+          "first reversed" in {
 
-          val result = Compiler.compile(df, query, config)
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
 
-          result.right.get.collect.toSet shouldEqual Set(
-            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
-            Row("<http://example.org/Charles>", "<http://example.org/Charles>")
-          )
-        }
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
 
-        "both reversed" in {
+            val result = Compiler.compile(df, query, config)
 
-          val df = List(
-            (
-              "<http://example.org/Alice>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
-            ),
-            (
-              "<http://example.org/Bob>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
-            ),
-            (
-              "<http://example.org/Charles>",
-              "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
             )
-          ).toDF("s", "p", "o")
+          }
 
-          val query =
-            """
-              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-              |
-              |SELECT ?s ?o
-              |WHERE {
-              | ?s (^foaf:knows/foaf:name) ?o .
-              |}
-              |""".stripMargin
+          "second reversed" in {
 
-          val result = Compiler.compile(df, query, config)
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
 
-          result.right.get.collect.toSet shouldEqual Set(
-            Row("\"Charles\"", "<http://example.org/Bob>")
-          )
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/foaf:friend/^foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/foaf:friend/foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first and second reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:friend/foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first and third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/^foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "second and third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/^foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "second and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "third and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/foaf:friend/^foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first, second and third reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Eduard>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:friend/^foaf:parent/foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first, second and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:friend/foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "first, third and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:friend/^foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "second, third and fourth reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:friend/^foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
+
+          "all reversed" in {
+
+            val df = List(
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Alice>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/friend>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/parent>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Eduard>",
+                "<http://xmlns.org/foaf/0.1/employee>",
+                "<http://example.org/Daniel>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:friend/^foaf:parent/^foaf:employee) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get.collect.toSet shouldEqual Set(
+              Row("<http://example.org/Alice>", "<http://example.org/Eduard>")
+            )
+          }
         }
       }
 
