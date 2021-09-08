@@ -80,7 +80,7 @@ object FindUnboundVariables {
           case ((declaredAcc, unboundAcc), (declaredElem, unboundElem)) =>
             (declaredAcc ++ declaredElem, unboundAcc ++ unboundElem)
         }
-      case Path(s, p, o, g) =>
+      case Path(s, p, o, g, _) =>
         val vars = (List(s, o)
           .filter(_.isVariable) ++ g.collect { case e if e.isVariable => e })
           .filterNot(_ == GRAPH_VARIABLE)

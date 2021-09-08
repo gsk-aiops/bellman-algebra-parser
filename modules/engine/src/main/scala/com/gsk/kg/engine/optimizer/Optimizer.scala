@@ -14,6 +14,6 @@ object Optimizer {
       JoinBGPs.phase[T] >>>
       ReorderBgps.phase[T] >>>
       RemoveNestedProject.phase[T] >>>
-      SubqueryPushdown.phase[T]
-
+      SubqueryPushdown.phase[T] >>>
+      PropertyPathRewrite.phase[T]
 }

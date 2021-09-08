@@ -10,12 +10,12 @@ import higherkindness.droste.Algebra
 import higherkindness.droste.Basis
 import higherkindness.droste.scheme
 
+import com.gsk.kg.engine.PropertyExpressionF._
 import com.gsk.kg.sparqlparser.ConditionOrder
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr
 import com.gsk.kg.sparqlparser.Expression
-import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
 
 import scala.collection.immutable.Nil
 
@@ -80,14 +80,15 @@ object ToTree extends LowPriorityToTreeInstances0 {
               Stream(Leaf(variable.toString), expression.toTree, r)
             )
           case DAG.Sequence(bps) => Node("Sequence", bps.toStream)
-          case DAG.Path(s, p, o, g) =>
+          case DAG.Path(s, p, o, g, rev) =>
             TreeRep.Node(
               s"Path",
               Stream(
                 s.s.toTree,
                 p.toTree,
                 o.s.toTree,
-                g.toString().toTree
+                g.toString().toTree,
+                rev.toTree
               )
             )
           case DAG.BGP(quads) => Node("BGP", Stream(quads.toTree))

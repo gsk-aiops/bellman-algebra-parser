@@ -1156,7 +1156,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                     Uri("<http://www.w3.org/2000/01/rdf-schema#label>")
                   ),
                   VARIABLE("?displayString"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1178,7 +1179,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?o"),
                   Reverse(Uri("<http://xmlns.org/foaf/0.1/mbox>")),
                   VARIABLE("?s"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1206,7 +1208,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                     Uri("<http://xmlns.org/foaf/0.1/name>")
                   ),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1228,7 +1231,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   OneOrMore(Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1250,7 +1254,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   ZeroOrMore(Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1272,7 +1277,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   ZeroOrOne(Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1294,7 +1300,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   NotOneOf(List(Uri("<http://xmlns.org/foaf/0.1/name>"))),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1316,7 +1323,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   BetweenNAndM(1, 2, Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1338,7 +1346,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   ExactlyN(1, Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1360,7 +1369,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   NOrMore(1, Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1382,7 +1392,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                   VARIABLE("?s"),
                   BetweenZeroAndN(1, Uri("<http://xmlns.org/foaf/0.1/knows>")),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1417,7 +1428,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                     OneOrMore(Uri("<http://example.org/c>"))
                   ),
                   VARIABLE("?o"),
-                  List(GRAPH_VARIABLE)
+                  List(GRAPH_VARIABLE),
+                  false
                 )
               ) =>
             succeed
@@ -1447,7 +1459,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                         NOrMore(2, Uri("<http://example.org/c>"))
                       ),
                       VARIABLE("?o"),
-                      List(GRAPH_VARIABLE)
+                      List(GRAPH_VARIABLE),
+                      false
                     ),
                     Path(
                       VARIABLE("?s"),
@@ -1465,7 +1478,8 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
                         OneOrMore(Uri("<http://example.org/c>"))
                       ),
                       VARIABLE("?o"),
-                      List(GRAPH_VARIABLE)
+                      List(GRAPH_VARIABLE),
+                      false
                     ),
                     BGP(
                       Seq(
