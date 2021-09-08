@@ -38,6 +38,7 @@ object BuiltInFuncParser {
   def sha512[_: P]: P[Unit]       = P("sha512" | "SHA512")
   def uuid[_: P]: P[Unit]         = P("uuid")
   def strUuid[_: P]: P[Unit]      = P("struuid")
+  def bNode[_: P]: P[Unit]        = P("bnode")
 
   def uriParen[_: P]: P[URI] =
     P("(" ~ uri ~ ExpressionParser.parser ~ ")").map(s => URI(s))
@@ -181,6 +182,10 @@ object BuiltInFuncParser {
     P("(" ~ strUuid ~ ")")
       .map(f => STRUUID())
 
+  def bNodeWithNameParen[_: P]: P[BNODE] =
+    P("(" ~ bNode ~ ExpressionParser.parser.? ~ ")")
+      .map(f => BNODE(f))
+
   def funcPatterns[_: P]: P[StringLike] =
     P(
       uriParen
@@ -215,6 +220,7 @@ object BuiltInFuncParser {
         | sha512Paren
         | uuidParen
         | strUuidParen
+        | bNodeWithNameParen
     )
 //      | StringValParser.string
 //      | StringValParser.variable)

@@ -87,6 +87,9 @@ object BuiltInFunc {
   )                          extends BuiltInFunc
   final case class UUID()    extends BuiltInFunc
   final case class STRUUID() extends BuiltInFunc
+  final case class BNODE(
+      s: Option[Expression] = None
+  ) extends BuiltInFunc
 }
 
 sealed trait MathFunc extends StringLike
