@@ -34,10 +34,10 @@ class BNodeSpec
   "perform BNODE function correctly" when {
 
     "str is simple literal" in {
-      val str      = "abc"
-      val actual = act(str)
-      val strTyped      = "\"abc\"^^xsd:string"
-      val actualTyped   = act(strTyped)
+      val str         = "abc"
+      val actual      = act(str)
+      val strTyped    = "\"abc\"^^xsd:string"
+      val actualTyped = act(strTyped)
       actual shouldEqual actualTyped
     }
   }
@@ -325,6 +325,35 @@ class BNodeSpec
       Evaluation.eval(
         df,
         Some(col(Evaluation.renamedColumn).equalTo(col("?id2"))),
+        query,
+        expected
+      )
+    }
+
+    "bnodes in a subquery generates same and diferentes values" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |SELECT ?name ?id1 ?id2 ?id3
+          |WHERE  {
+          |   {
+          |   SELECT ?id1 ?id2 ?name
+          |   WHERE {
+          |     ?x foaf:name ?name .
+          |     bind(BNODE("a") as ?id1) .
+          |     bind(BNODE("b") as ?id2) .
+          |         }
+          |       }
+          |   bind(BNODE("b") as ?id3) .
+          |   }
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(
+          col(Evaluation.renamedColumn).notEqual(col("?id2")) &&
+            col("?id2").equalTo(col("?id3"))
+        ),
         query,
         expected
       )

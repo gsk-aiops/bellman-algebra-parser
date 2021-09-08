@@ -13,6 +13,7 @@ object FuncTerms {
 
   /** Returns the string representation of a column.  It only modifies the data in the column if
     * it contains an URI wrapped in angle brackets, in which case it removes it.
+    *
     * @param col
     * @return
     */
@@ -22,6 +23,7 @@ object FuncTerms {
 
   /** Returns the string representation of a column.  It only modifies the data in the column if
     * it contains an URI wrapped in angle brackets, in which case it removes it.
+    *
     * @param value
     * @return
     */
@@ -129,6 +131,7 @@ object FuncTerms {
     ).otherwise(lit(""))
 
   /** Returns a column with 'true' or 'false' rows indicating whether a column has blank nodes
+    *
     * @param col
     * @return
     */
@@ -206,15 +209,18 @@ object FuncTerms {
     ).otherwise(lit(false))
 
   /** Returns UUID
+    *
     * @return
     */
   def uuid: UserDefinedFunction = {
     def uuidGen: () => String = () =>
       "urn:uuid:" + java.util.UUID.randomUUID().toString
+
     udf(uuidGen)
   }
 
   /** Return uuid
+    *
     * @return
     */
   def strUuid: Column = {
@@ -224,31 +230,43 @@ object FuncTerms {
     u.substr(startPos, endPos)
   }
 
-  /** @param col
-    * @return
+  /** Return a sparql Blank Node. The name of the new blank node allways will be "_:" + UUID
+    * You can create two Blank Node with the sames names by linking with the same input parameter.
+    * In any case the real name continue are "_:" + UUID
+    *
+    * @param col input name. If you don't specific two Blanck Node with the same name or you specific a empty input
+    *            parameter, the Blank Node names will always be differents
+    * @return sparkQL Column with a Blanck Node
     */
-  def bNode(col: Column): Column = {
+  def bNode(maybeCol: Option[Column]): Column = {
     val prefix = "_:"
 
-    // Necesary var to generate diferents UUIDS between rows names when you specific de label name
+    // Necesary var to generate diferents UUIDS between rows names when you specific the label name
     var rowID = 0
 
-    val nameToArrayOfBits: String => String = (str: String) => {
-      if (str.isEmpty) {
-        prefix + java.util.UUID.randomUUID().toString
-      } else {
-        val strToArrayOfBits = (str + rowID.toString).toArray.map(_.toByte)
-        rowID = rowID + 1
-        prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
-      }
+    val randomUUIDBNodeName: () => String = () =>
+      prefix + java.util.UUID.randomUUID().toString
+
+    val specificUUIDBNodeName: String => String = (str: String) => {
+      val strToArrayOfBits =
+        (extractStringLiteral(str) + rowID.toString).toArray.map(_.toByte)
+      rowID = rowID + 1
+      prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
     }
 
-    val udfFoo = udf(nameToArrayOfBits)
-    udfFoo(extractStringLiteral(col))
+    val udfRandomUUIDBNodeName   = udf(randomUUIDBNodeName)
+    val udfSpecificUUIDBNodeName = udf(specificUUIDBNodeName)
+
+    maybeCol match {
+      case None => udfRandomUUIDBNodeName()
+      case Some(col: Column) =>
+        udfSpecificUUIDBNodeName(extractStringLiteral(col))
+    }
   }
 
-  /** @param str
-    * @return
-    */
-  def bNode(str: String): Column = bNode(lit(extractStringLiteral(str)))
+//  def bNode(maybeString: Option[String]): Column =
+//    maybeString match {
+//    case None => bNode(None:Option[Column])
+//    case Some(col:String) => bNode(Some(lit(col)))
+//  }
 }
