@@ -5,6 +5,8 @@ import cats.data.Kleisli
 import cats.data.ReaderWriterStateT
 import cats.instances.either._
 
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.Row
@@ -14,6 +16,7 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StructType
 
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.Result
 
 import org.slf4j.LoggerFactory
@@ -37,19 +40,19 @@ package object engine {
   type Log = Chain[LogMessage]
   object Log {
     def debug(phase: String, message: String): M[Unit] =
-      M.tell[Result, Config, Log, DataFrame](
+      M.tell[Result, Config, Log, DataFrame @@ Untyped](
         Chain(LogMessage(LogLevel.Debug, phase, message))
       )
     def info(phase: String, message: String): M[Unit] =
-      M.tell[Result, Config, Log, DataFrame](
+      M.tell[Result, Config, Log, DataFrame @@ Untyped](
         Chain(LogMessage(LogLevel.Info, phase, message))
       )
     def warning(phase: String, message: String): M[Unit] =
-      M.tell[Result, Config, Log, DataFrame](
+      M.tell[Result, Config, Log, DataFrame @@ Untyped](
         Chain(LogMessage(LogLevel.Warning, phase, message))
       )
     def error(phase: String, message: String): M[Unit] =
-      M.tell[Result, Config, Log, DataFrame](
+      M.tell[Result, Config, Log, DataFrame @@ Untyped](
         Chain(LogMessage(LogLevel.Error, phase, message))
       )
 
@@ -85,7 +88,7 @@ package object engine {
     )
   }
 
-  type M[A] = ReaderWriterStateT[Result, Config, Log, DataFrame, A]
+  type M[A] = ReaderWriterStateT[Result, Config, Log, DataFrame @@ Untyped, A]
   val M = ReaderWriterStateT
 
   /** [[Phase]] represents a phase in the compiler.  It's parametrized

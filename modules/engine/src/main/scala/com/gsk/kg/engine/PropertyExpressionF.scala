@@ -3,6 +3,7 @@ package com.gsk.kg.engine
 import cats.implicits._
 
 import higherkindness.droste._
+import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
@@ -10,13 +11,14 @@ import org.apache.spark.sql.SQLContext
 
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.properties.FuncProperty
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
 import com.gsk.kg.sparqlparser.Result
 
 object PropertyExpressionF {
 
-  type ColOrDf = Either[Column, DataFrame]
+  type ColOrDf = Either[Column, DataFrame @@ Untyped]
 
   def compile[T](
       t: T,
@@ -24,7 +26,7 @@ object PropertyExpressionF {
   )(implicit
       T: Basis[PropertyExpressionF, T],
       sc: SQLContext
-  ): DataFrame => Result[ColOrDf] =
+  ): DataFrame @@ Untyped => Result[ColOrDf] =
     df => {
       val algebraM: AlgebraM[M, PropertyExpressionF, ColOrDf] =
         AlgebraM.apply[M, PropertyExpressionF, ColOrDf] {
@@ -58,7 +60,7 @@ object PropertyExpressionF {
     }
 
   private def unknownPropertyPath(name: String): M[ColOrDf] =
-    M.liftF[Result, Config, Log, DataFrame, ColOrDf](
+    M.liftF[Result, Config, Log, DataFrame @@ Untyped, ColOrDf](
       EngineError.UnknownPropertyPath(name).asLeft[ColOrDf]
     )
 }

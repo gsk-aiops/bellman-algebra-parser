@@ -5,6 +5,8 @@ import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
 
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
@@ -13,17 +15,19 @@ import org.apache.spark.sql.functions._
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.FuncForms
 import com.gsk.kg.engine.functions.PathFrame._
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 
 object FuncProperty {
 
   def alternative(
-      df: DataFrame,
+      df: DataFrame @@ Untyped,
       pel: ColOrDf,
       per: ColOrDf
   ): Result[ColOrDf] = {
-    val col = df("p")
+    val col = df.getColumn("p")
 
     (pel, per) match {
       case (Left(l), Left(r)) =>
@@ -48,13 +52,13 @@ object FuncProperty {
   }
 
   def seq(
-      df: DataFrame,
+      df: DataFrame @@ Untyped,
       pel: ColOrDf,
       per: ColOrDf
   ): Result[ColOrDf] = {
 
-    val resultL: Result[DataFrame] = (pel match {
-      case Left(col)    => df.filter(df("p") === col)
+    val resultL: Result[DataFrame @@ Untyped] = (pel match {
+      case Left(col)    => df.filter(df.getColumn("p") === col)
       case Right(accDf) => accDf
     })
       .withColumnRenamed("s", "sl")
@@ -62,9 +66,9 @@ object FuncProperty {
       .withColumnRenamed("o", "ol")
       .asRight[EngineError]
 
-    val resultR: Result[DataFrame] = (per match {
+    val resultR: Result[DataFrame @@ Untyped] = (per match {
       case Left(col) =>
-        df.filter(df("p") === col)
+        df.filter(df.getColumn("p") === col)
       case Right(df) =>
         df
     }).withColumnRenamed("s", "sr")
@@ -78,12 +82,11 @@ object FuncProperty {
     } yield {
       Right(
         l
-          .join(
+          .innerJoin(
             r,
-            l("ol") <=> r("sr"),
-            "inner"
+            l.getColumn("ol") <=> r.getColumn("sr")
           )
-          .select(l("sl"), r("or"))
+          .select(Seq(l.getColumn("sl"), r.getColumn("or")))
           .withColumnRenamed("sl", "s")
           .withColumnRenamed("or", "o")
       )
@@ -91,7 +94,7 @@ object FuncProperty {
   }
 
   def betweenNAndM(
-      df: DataFrame,
+      df: DataFrame @@ Untyped,
       maybeN: Option[Int],
       maybeM: Option[Int],
       e: ColOrDf
@@ -126,7 +129,7 @@ object FuncProperty {
     checkArgs.flatMap { case (effectiveN, effectiveM) =>
       val onePaths = getOneLengthPaths(e match {
         case Right(predDf) => predDf
-        case Left(predCol) => df.filter(predCol <=> df("p"))
+        case Left(predCol) => df.filter(predCol <=> df.getColumn("p"))
       })
 
       val (maxLength, pathsFrame) =
@@ -148,7 +151,7 @@ object FuncProperty {
     }
   }
 
-  def notOneOf(df: DataFrame, es: List[ColOrDf]): Result[ColOrDf] = {
+  def notOneOf(df: DataFrame @@ Untyped, es: List[ColOrDf]): Result[ColOrDf] = {
 
     val resolveColCnd: ColOrDf => Result[Column] = { expr: ColOrDf =>
       expr match {
@@ -159,7 +162,7 @@ object FuncProperty {
             )
             .asLeft
         case Left(predCol) =>
-          (predCol =!= df("p")).asRight
+          (predCol =!= df.getColumn("p")).asRight
       }
     }
 

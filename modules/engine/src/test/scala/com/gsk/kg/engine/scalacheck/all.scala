@@ -4,6 +4,6 @@ object all
     extends ChunkedListArbitraries
     with CommonGenerators
     with DAGArbitraries
-    with DataFrameArbitraries
+    with DataFrameImplicits
     with DrosteImplicits
     with ExpressionArbitraries

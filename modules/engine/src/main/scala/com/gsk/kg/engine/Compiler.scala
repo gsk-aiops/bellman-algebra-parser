@@ -2,9 +2,9 @@ package com.gsk.kg.engine
 
 import cats.data.Kleisli
 import cats.implicits._
-import cats.syntax.either._
 
 import higherkindness.droste.Basis
+import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
@@ -14,6 +14,7 @@ import com.gsk.kg.config.Config
 import com.gsk.kg.engine.analyzer.Analyzer
 import com.gsk.kg.engine.data.ToTree._
 import com.gsk.kg.engine.optimizer.Optimizer
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.Query
 import com.gsk.kg.sparqlparser.QueryConstruct
 import com.gsk.kg.sparqlparser.Result
@@ -24,9 +25,10 @@ object Compiler {
   def compile(df: DataFrame, query: String, config: Config)(implicit
       sc: SQLContext
   ): Result[DataFrame] =
-    compiler(df)
-      .run(query)
-      .run(config, df)
+    compiler
+      .run((query, df))
+      .run(config, @@(df))
+      .right
       .map { case (log, _, df) =>
         Log.run(log)
         df
@@ -36,9 +38,9 @@ object Compiler {
   def explain(query: String)(implicit sc: SQLContext): Unit = {
     import sc.implicits._
     val df = List.empty[(String, String, String)].toDF("s", "p", "o")
-    compiler(df)
-      .run(query)
-      .run(Config.default, df) match {
+    compiler
+      .run(query, df)
+      .run(Config.default, @@(df)) match {
       case Left(x) => println(x)
       case Right((log, _, df)) =>
         Log.run(log)
@@ -48,19 +50,59 @@ object Compiler {
 
   /** Put together all phases of the compiler
     *
-    * @param df
-    * @param sc
+    * =Architecture=
+    *
+    * {{{
+    * +---------+
+    * | parser  +---------+
+    * +---+-----+         |
+    *     |               |
+    * +---v-------------+ |
+    * |transformToGraph | |
+    * +---+-------------+ |
+    *     |               |
+    *     |               |
+    * +---v-------------+ |
+    * |staticAnalysis   | |
+    * +---+-------------+ |
+    *     |               |
+    *     |               |
+    * +---v---------------v-+
+    * |optimizer            |
+    * +---+-----------------+
+    *     |
+    *     |
+    *     | +---------------+
+    *     | |dataFrameTyper |
+    *     | +--------+------+
+    *     |          |
+    *     |          |
+    * +---v----------v------+
+    * |engine               |
+    * +---+-----------------+
+    *     |
+    *     |
+    *     |
+    * +---v---------+
+    * |rdfFormatter |
+    * +-------------+
+    * }}}
+    *
+    * @param sc Spark's [[SQLContext]], required for the engine to run
     * @return
     */
-  private def compiler(df: DataFrame)(implicit
+  private def compiler[T: Basis[DAG, *]](implicit
       sc: SQLContext
-  ): Phase[String, DataFrame] =
-    parser >>>
-      transformToGraph.first >>>
-      staticAnalysis.first >>>
-      optimizer >>>
-      engine(df) >>>
-      rdfFormatter
+  ): Phase[(String, DataFrame), DataFrame] = {
+    (parser
+      .andThen(transformToGraph.first[Graphs])
+      .andThen(staticAnalysis.first[Graphs])
+      .andThen(optimizer))
+      .first[DataFrame]
+      .andThen(dataFrameTyper.second[T])
+      .andThen(engine[T])
+      .andThen(rdfFormatter)
+  }
 
   private def transformToGraph[T: Basis[DAG, *]]: Phase[Query, T] =
     Kleisli[M, Query, T] { query =>
@@ -81,12 +123,12 @@ object Compiler {
     * @param sc
     * @return
     */
-  private def engine[T: Basis[DAG, *]](df: DataFrame)(implicit
+  private def engine[T: Basis[DAG, *]](implicit
       sc: SQLContext
-  ): Phase[T, DataFrame] =
-    Kleisli[M, T, DataFrame] { query =>
+  ): Phase[(T, DataFrame), DataFrame] =
+    Kleisli[M, (T, DataFrame), DataFrame] { case (query, df) =>
       Log.info("Engine", "Running the engine") *>
-        M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
           Engine.evaluate(df, query, config)
         }
     }
@@ -96,7 +138,7 @@ object Compiler {
   private def parser: Phase[String, (Query, Graphs)] =
     Kleisli[M, String, (Query, Graphs)] { query =>
       Log.info("Parser", "Running the parser") *>
-        M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
           QueryConstruct.parse(query, config)
         }
     }
@@ -110,8 +152,17 @@ object Compiler {
   private def rdfFormatter: Phase[DataFrame, DataFrame] = {
     Kleisli[M, DataFrame, DataFrame] { inDf =>
       Log.info("RdfFormatter", "Running the RDF formatter") *>
-        M.ask[Result, Config, Log, DataFrame].map { config =>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
           RdfFormatter.formatDataFrame(inDf, config)
+        }
+    }
+  }
+
+  private def dataFrameTyper: Phase[DataFrame, DataFrame] = {
+    Kleisli[M, DataFrame, DataFrame] { inDf =>
+      Log.info("DataFrameTyper", "Running the DataFrameTyper") *>
+        M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
+          DataFrameTyper.typeDataFrame(inDf, config)
         }
     }
   }

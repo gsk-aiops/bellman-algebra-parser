@@ -2,11 +2,16 @@ package com.gsk.kg.engine.functions
 
 import cats.kernel.Monoid
 
+import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.engine.functions.Literals.nullLiteral
+import com.gsk.kg.engine.relational.Relational
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
 
 import scala.annotation.tailrec
 import scala.util.Try
@@ -51,14 +56,14 @@ object PathFrame {
     * |null                       |null                             |null                       |
     * +---------------------------+---------------------------------+---------------------------+
     *
-    * Where the graph that forms the initial DataFrame has been traversed and generated a new DataFrame that contains
+    * Where the graph that forms the initial DataFrame @@ Untyped has been traversed and generated a new DataFrame @@ Untyped that contains
     * the paths of the graph. Taking a look at this PathFrame we can see that it contains next path lengths:
     * - 1 length: triples from columns 1 to 3.
     * - 2 length: triples from columns 1 to 5.
     * - 3 length: triples from columns 1 to 7.
     */
 
-  type PathFrame = DataFrame
+  type PathFrame = DataFrame @@ Untyped
 
   val SIdx = 1
   val PIdx = 2
@@ -72,7 +77,7 @@ object PathFrame {
     * @return Dataframe with all the triples connected creating paths
     */
   def constructPathFrame(
-      initial: DataFrame,
+      initial: DataFrame @@ Untyped,
       limit: Option[Int]
   ): (Int, PathFrame) = {
 
@@ -93,15 +98,14 @@ object PathFrame {
         .withColumnRenamed(s"$SIdx", s"${stepSlice(SIdx)}")
 
       val stepAcc = accPaths
-        .join(
+        .leftOuter(
           stepPath,
-          Seq(s"${stepSlice(SIdx)}"),
-          "left_outer"
+          Seq(s"${stepSlice(SIdx)}")
         )
-        .select(stepColNames.head, stepColNames.tail: _*)
+        .select(stepColNames.map(col))
 
       val continueTraversing = !stepAcc
-        .filter(stepAcc(s"${stepSlice(OIdx)}").isNotNull)
+        .filter(stepAcc.getColumn(s"${stepSlice(OIdx)}").isNotNull)
         .isEmpty
 
       limit match {
@@ -122,7 +126,7 @@ object PathFrame {
     * @param df
     * @return
     */
-  def getOneLengthPaths(df: DataFrame): PathFrame = {
+  def getOneLengthPaths(df: DataFrame @@ Untyped): PathFrame = {
     df
       .drop("g")
       .withColumnRenamed("s", s"$SIdx")
@@ -135,14 +139,14 @@ object PathFrame {
     * @param df
     * @return
     */
-  def getZeroLengthPaths(df: DataFrame): PathFrame = {
-    val sDf = df.select(df("s"))
-    val oDf = df.select(df("o"))
+  def getZeroLengthPaths(df: DataFrame @@ Untyped): PathFrame = {
+    val sDf = df.select(Seq(col("s")))
+    val oDf = df.select(Seq(col("o")))
 
-    val vertices = sDf.union(oDf).distinct()
+    val vertices = sDf.union(oDf).distinct
     vertices
       .withColumn("p", nullLiteral)
-      .withColumn("o", vertices("s"))
+      .withColumn("o", vertices.getColumn("s"))
       .withColumnRenamed("s", s"$SIdx")
       .withColumnRenamed("p", s"$PIdx")
       .withColumnRenamed("o", s"$OIdx")
@@ -156,7 +160,7 @@ object PathFrame {
     * @return
     */
   def getNLengthPathTriples(
-      df: DataFrame,
+      df: DataFrame @@ Untyped,
       pathFrame: PathFrame,
       nPath: Int
   ): PathFrame = {
@@ -169,9 +173,9 @@ object PathFrame {
       val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString)
 
       val nPaths = pathFrame
-        .select(cols.head, cols.tail: _*)
+        .select(cols.map(col))
         .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
-          acc && pathFrame(elem).isNotNull
+          acc && pathFrame.getColumn(elem).isNotNull
         })
         .withColumnRenamed(s"$oSlice", s"$OIdx")
 
@@ -185,7 +189,10 @@ object PathFrame {
     * @param df2
     * @return
     */
-  def merge(df1: DataFrame, df2: DataFrame): DataFrame = {
+  def merge(
+      df1: DataFrame @@ Untyped,
+      df2: DataFrame @@ Untyped
+  ): DataFrame @@ Untyped = {
 
     def getNewColumns(column: Set[String], mergedCols: Set[String]) = {
       mergedCols.toList.map {
@@ -194,11 +201,11 @@ object PathFrame {
       }
     }
 
-    val merged_cols = df1.columns.toSet ++ df2.columns.toSet
+    val mergedCols = df1.columns.toSet ++ df2.columns.toSet
     val newDf1 =
-      df1.select(getNewColumns(df1.columns.toSet, merged_cols): _*)
+      df1.select(getNewColumns(df1.columns.toSet, mergedCols))
     val newDf2 =
-      df2.select(getNewColumns(df2.columns.toSet, merged_cols): _*)
+      df2.select(getNewColumns(df2.columns.toSet, mergedCols))
 
     newDf1.unionByName(newDf2)
   }
@@ -207,9 +214,11 @@ object PathFrame {
     * @param pf Pathframe that is wanted to be converted.
     * @return
     */
-  def toSPOG(pf: PathFrame): DataFrame = {
+  def toSPOG(pf: PathFrame): DataFrame @@ Untyped = {
 
-    def hasColumn(df: DataFrame, path: String) = Try(df(path)).isSuccess
+    def hasColumn(df: DataFrame @@ Untyped, path: String) = Try(
+      df.getColumn(path)
+    ).isSuccess
 
     val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
       case (accDf, (idx, name)) =>
@@ -234,7 +243,7 @@ object PathFrame {
   ): Monoid[PathFrame] =
     new Monoid[PathFrame] {
       def combine(x: PathFrame, y: PathFrame): PathFrame =
-        merge(x, y).distinct()
-      def empty: PathFrame = sc.emptyDataFrame
+        merge(x, y).distinct
+      def empty: PathFrame = Relational[PathFrame].empty
     }
 }

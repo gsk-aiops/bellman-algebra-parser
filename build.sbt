@@ -1,7 +1,7 @@
 import xerial.sbt.Sonatype._
 
 lazy val Versions = Map(
-  "kind-projector"       -> "0.11.3",
+  "kind-projector"       -> "0.13.2",
   "cats"                 -> "2.0.0",
   "cats-scalacheck"      -> "0.2.0",
   "jena"                 -> "3.17.0",
@@ -22,6 +22,7 @@ lazy val Versions = Map(
   "discipline-scalatest" -> "2.0.1",
   "reftree"              -> "1.4.0",
   "shims"                -> "2.1.0",
+  "simulacrum"           -> "1.0.1",
   "pureconfig"           -> "0.14.0",
   "quiver"               -> "7.0.19"
 )
@@ -132,11 +133,13 @@ lazy val `bellman-spark-engine` = project
       "io.verizon.quiver"          %% "core"         % Versions("quiver"),
       "org.apache.spark"           %% "spark-sql"    % Versions("spark") % Provided,
       "com.github.julien-truffaut" %% "monocle-core" % Versions("monocle"),
+      "org.typelevel"              %% "simulacrum"   % Versions("simulacrum"),
       "com.github.julien-truffaut" %% "monocle-macro" % Versions("monocle"),
       "com.github.julien-truffaut" %% "monocle-law" % Versions(
         "monocle"
       )                 % Test,
       "com.codecommit" %% "shims" % Versions("shims") % Test,
+      "org.typelevel"  %% "cats-laws" % Versions("cats") % Test,
       "org.typelevel"  %% "discipline-core" % Versions("discipline") % Test,
       "org.typelevel"  %% "discipline-scalatest" % Versions(
         "discipline-scalatest"
@@ -152,9 +155,6 @@ lazy val `bellman-spark-engine` = project
         "scalatestplus"
       ) % Test
     ),
-    libraryDependencies ++= on(2, 11)(
-      "net.sansa-stack" %% "sansa-rdf-spark" % Versions("sansa") % Test
-    ).value,
     dependencyOverrides ++= Seq(
       "com.fasterxml.jackson.core"    % "jackson-databind" % Versions("jackson"),
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions(
