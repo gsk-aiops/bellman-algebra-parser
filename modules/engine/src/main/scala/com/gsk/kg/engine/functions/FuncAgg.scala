@@ -13,7 +13,7 @@ import com.gsk.kg.engine.functions.Literals.nullLiteral
 object FuncAgg {
 
   /** Sample is a set function which returns an arbitrary value from
-    * the multiset passed to it.
+    * the Multiset[A] passed to it.
     *
     * Implemented using [[org.apache.spark.sql.functions.first]].
     *

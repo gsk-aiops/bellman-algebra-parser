@@ -3,9 +3,10 @@ package com.gsk.kg.config
 final case class Config(
     isDefaultGraphExclusive: Boolean,
     stripQuestionMarksOnOutput: Boolean,
-    formatRdfOutput: Boolean
+    formatRdfOutput: Boolean,
+    typeDataframe: Boolean
 )
 
 object Config {
-  val default: Config = Config(true, false, false)
+  val default: Config = Config(true, false, false, false)
 }

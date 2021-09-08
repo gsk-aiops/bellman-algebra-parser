@@ -7,10 +7,12 @@ import cats.data.ValidatedNec
 import cats.implicits._
 
 import higherkindness.droste.Basis
+import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.DataFrame
 
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 
@@ -33,7 +35,7 @@ object Analyzer {
       x match {
         case Invalid(e) =>
           e.traverse(err => Log.error("Analyzer", err)) *>
-            M.liftF[Result, Config, Log, DataFrame, T](
+            M.liftF[Result, Config, Log, DataFrame @@ Untyped, T](
               EngineError.AnalyzerError(e).asLeft
             )
         case Valid(e) => t.pure[M]

@@ -8,6 +8,8 @@ import cats.syntax.applicative._
 import cats.syntax.either._
 
 import higherkindness.droste._
+import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
+import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
@@ -23,6 +25,9 @@ import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
 import com.gsk.kg.engine.functions.FuncAgg
 import com.gsk.kg.engine.functions.FuncForms
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.relational.RelationalGrouped
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr.Quad
@@ -36,8 +41,10 @@ import java.{util => ju}
 
 object Engine {
 
-  def evaluateAlgebraM(implicit sc: SQLContext): AlgebraM[M, DAG, Multiset] =
-    AlgebraM[M, DAG, Multiset] {
+  def evaluateAlgebraM(implicit
+      sc: SQLContext
+  ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
+    AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] {
       case DAG.Describe(vars, r) => evaluateDescribe(vars, r)
       case DAG.Ask(r)            => evaluateAsk(r)
       case DAG.Construct(bgp, r) => evaluateConstruct(bgp, r)
@@ -73,16 +80,18 @@ object Engine {
       sc: SQLContext
   ): Result[DataFrame] = {
     val eval =
-      scheme.cataM[M, DAG, T, Multiset](evaluateAlgebraM)
+      scheme.cataM[M, DAG, T, Multiset[DataFrame @@ Untyped]](evaluateAlgebraM)
 
-    validateInputDataFrame(dataframe).flatMap { df =>
+    validateInputDataFrame(@@(dataframe)).flatMap { df =>
       eval(dag)
         .runA(config, df)
-        .map(_.dataframe)
+        .map(_.relational.unwrap)
     }
   }
 
-  private def validateInputDataFrame(df: DataFrame): Result[DataFrame] = {
+  private def validateInputDataFrame(
+      df: DataFrame @@ Untyped
+  ): Result[DataFrame @@ Untyped] = {
     val hasThreeOrFourColumns = df.columns.length == 3 || df.columns.length == 4
 
     for {
@@ -100,7 +109,9 @@ object Engine {
     } yield dataFrame
   }
 
-  private def evaluateNoop(str: String)(implicit sc: SQLContext): M[Multiset] =
+  private def evaluateNoop(
+      str: String
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
     for {
       _ <- Log.info("Engine", str)
     } yield Multiset.empty
@@ -110,23 +121,31 @@ object Engine {
     Quad(subject, createVar("p"), createVar("o"), Nil)
   }
 
-  private def evaluateDescribe(vars: Seq[StringVal], r: Multiset)(implicit
+  private def evaluateDescribe(
+      vars: Seq[StringVal],
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit
       sc: SQLContext
-  ): M[Multiset] = {
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val quads: ChunkedList[Quad] = ChunkedList
       .fromList(
         vars.toList.zipWithIndex.map(createDescribeTriple.tupled)
       )
     val bgp = Expr.BGP(Foldable[ChunkedList].toList(quads))
 
-    M.get[Result, Config, Log, DataFrame]
+    M.get[Result, Config, Log, DataFrame @@ Untyped]
       .map { df =>
         quads
           .mapChunks { chunk =>
             val condition = composedConditionFromChunk(df, chunk)
             applyChunkToDf(chunk, condition, df)
           }
-          .foldLeft(Multiset.empty)((acc, other) => acc.union(other))
+          .foldLeft(Multiset.empty)(
+            (
+                acc: Multiset[DataFrame @@ Untyped],
+                other: Multiset[DataFrame @@ Untyped]
+            ) => acc.union(other)
+          )
       }
       .flatMap(m => evaluateConstruct(bgp, m))
   }
@@ -134,10 +153,10 @@ object Engine {
   private def applyChunkToDf(
       chunk: ChunkedList.Chunk[Quad],
       condition: Column,
-      df: DataFrame
+      df: DataFrame @@ Untyped
   )(implicit
       sc: SQLContext
-  ): Multiset = {
+  ): Multiset[DataFrame @@ Untyped] = {
     import sc.implicits._
     val current = df.filter(condition)
     val vars =
@@ -147,9 +166,9 @@ object Engine {
         .toList
         .flatten
     val selected =
-      current.select(vars.map(v => $"${v._2}".as(v._1.s)): _*)
+      current.select(vars.map(v => $"${v._2}".as(v._1.s)))
 
-    Multiset(
+    Multiset[DataFrame @@ Untyped](
       vars.map {
         case (GRAPH_VARIABLE, _) =>
           VARIABLE(GRAPH_VARIABLE.s)
@@ -160,44 +179,59 @@ object Engine {
     )
   }
 
-  private def evaluateAsk(r: Multiset)(implicit sc: SQLContext): M[Multiset] = {
+  private def evaluateAsk(
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
     val askVariable = VARIABLE("?_askResult")
-    val isEmpty     = !r.dataframe.isEmpty
+    val isEmpty     = !r.relational.isEmpty
     val schema      = StructType(Seq(StructField(askVariable.s, BooleanType, false)))
     val rows        = Seq(SparkRow(isEmpty))
-    val askDf =
+    val askDf = @@[DataFrame, Untyped](
       sc.sparkSession.createDataFrame(sc.sparkContext.parallelize(rows), schema)
+    )
 
-    Multiset(
+    Multiset[DataFrame @@ Untyped](
       bindings = Set(askVariable),
-      dataframe = askDf
+      relational = askDf
     )
   }.pure[M]
 
-  private def evaluateJoin(l: Multiset, r: Multiset)(implicit
+  private def evaluateJoin(
+      l: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit
       sc: SQLContext
-  ): M[Multiset] =
+  ): M[Multiset[DataFrame @@ Untyped]] =
     l.join(r).pure[M]
 
-  private def evaluateUnion(l: Multiset, r: Multiset): M[Multiset] =
+  private def evaluateUnion(
+      l: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     l.union(r).pure[M]
 
-  private def evaluateMinus(l: Multiset, r: Multiset): M[Multiset] =
+  private def evaluateMinus(
+      l: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     l.minus(r).pure[M]
 
-  private def evaluateScan(graph: String, expr: Multiset): M[Multiset] = {
+  private def evaluateScan(
+      graph: String,
+      expr: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     val bindings =
       expr.bindings.filter(_.s != GRAPH_VARIABLE.s) + VARIABLE(graph)
-    val df = expr.dataframe.withColumn(graph, expr.dataframe(GRAPH_VARIABLE.s))
-    Multiset(
+    val df = expr.relational.withColumn(graph, col(GRAPH_VARIABLE.s))
+    Multiset[DataFrame @@ Untyped](
       bindings,
       df
     )
   }.pure[M]
 
-  private def evaluateSequence(bps: List[Multiset])(implicit
-      sc: SQLContext
-  ): M[Multiset] =
+  private def evaluateSequence(bps: List[Multiset[DataFrame @@ Untyped]])(
+      implicit sc: SQLContext
+  ): M[Multiset[DataFrame @@ Untyped]] =
     Foldable[List].fold(bps).pure[M]
 
   private def evaluatePath(
@@ -205,9 +239,9 @@ object Engine {
       p: PropertyExpression,
       o: StringVal,
       g: List[StringVal]
-  )(implicit sc: SQLContext): M[Multiset] = {
-    M.get[Result, Config, Log, DataFrame].flatMap { df =>
-      M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
+    M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
+      M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
         PropertyExpressionF
           .compile[PropertyExpression](p, config)
           .apply(df)
@@ -220,7 +254,7 @@ object Engine {
                 g
               ).getNamesAndPositions :+ (GRAPH_VARIABLE, "g")
 
-              Multiset(
+              Multiset[DataFrame @@ Untyped](
                 vars.map {
                   case (GRAPH_VARIABLE, _) =>
                     VARIABLE(GRAPH_VARIABLE.s)
@@ -241,8 +275,8 @@ object Engine {
 
   private def evaluateBGP(
       quads: ChunkedList[Expr.Quad]
-  )(implicit sc: SQLContext): M[Multiset] =
-    M.get[Result, Config, Log, DataFrame].map { df =>
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
+    M.get[Result, Config, Log, DataFrame @@ Untyped].map { df =>
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
@@ -260,12 +294,12 @@ object Engine {
     * - Predicates in the same chunk are composed with OR operation. Eg:
     *   (c1 -> (true && p1 && (p2 || p3)), c2 -> (true && p4)) =>
     *     (false || ((true && p1 && (p2 || p3)) || (true && p4)))
-    * @param df
+    * @param relational
     * @param chunk
     * @return
     */
   def composedConditionFromChunk(
-      df: DataFrame,
+      relational: DataFrame @@ Untyped,
       chunk: Chunk[Quad]
   ): Column = {
     chunk
@@ -274,7 +308,7 @@ object Engine {
           .groupBy(_._2)
           .map { case (_, vs) =>
             vs.map { case (pred, position) =>
-              val col = df(position)
+              val col = relational.getColumn(position)
               when(
                 col.startsWith("\"") && col.endsWith("\""),
                 FuncForms.equals(trim(col, "\""), lit(pred.s))
@@ -286,10 +320,14 @@ object Engine {
       .foldLeft(lit(true))(_ && _)
   }
 
-  private def evaluateDistinct(r: Multiset): M[Multiset] =
+  private def evaluateDistinct(
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     M.liftF(r.distinct)
 
-  private def evaluateReduced(r: Multiset): M[Multiset] =
+  private def evaluateReduced(
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     // It is up to the implementation to eliminate duplicates or not.
     // See: https://www.w3.org/TR/sparql11-query/#modReduced
     M.liftF(r.distinct)
@@ -297,25 +335,31 @@ object Engine {
   private def evaluateGroup(
       vars: List[VARIABLE],
       func: List[(VARIABLE, Expression)],
-      r: Multiset
-  ): M[Multiset] = {
-    val df = r.dataframe
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
+    val groupedDF: RelationalGroupedDataset @@ Untyped =
+      RelationalGrouped
+        .Aux[DataFrame @@ Untyped, RelationalGroupedDataset @@ Untyped]
+        .groupBy(
+          r.relational,
+          (vars :+ VARIABLE(GRAPH_VARIABLE.s)).map(_.s).map(col)
+        )
 
-    val groupedDF = df.groupBy(
-      (vars :+ VARIABLE(GRAPH_VARIABLE.s)).map(_.s).map(df.apply): _*
+    evaluateAggregation(
+      vars :+ VARIABLE(GRAPH_VARIABLE.s),
+      groupedDF.unwrap,
+      func
     )
-
-    evaluateAggregation(vars :+ VARIABLE(GRAPH_VARIABLE.s), groupedDF, func)
       .map(df =>
         r.copy(
-          dataframe = df,
+          relational = df.@@,
           bindings =
             r.bindings.union(func.toSet[(VARIABLE, Expression)].map(x => x._1))
         )
       )
   }
 
-  private def toColumOperation(
+  private def toColumnOperation(
       func: (VARIABLE, Expression)
   ): M[Column] = func match {
     case (VARIABLE(name), Aggregate.COUNT(VARIABLE(v))) =>
@@ -333,7 +377,7 @@ object Engine {
     case (VARIABLE(name), Aggregate.GROUP_CONCAT(VARIABLE(v), separator)) =>
       FuncAgg.groupConcat(col(v).as(name), separator).pure[M]
     case fn =>
-      M.liftF[Result, Config, Log, DataFrame, Column](
+      M.liftF[Result, Config, Log, DataFrame @@ Untyped, Column](
         EngineError
           .UnknownFunction("Aggregate function: " + fn.toString)
           .asLeft
@@ -349,18 +393,18 @@ object Engine {
       val cols: List[Column] = vars.map(_.s).map(col).map(FuncAgg.sample)
       df.agg(cols.head, cols.tail: _*).pure[M]
     case agg :: Nil =>
-      toColumOperation(agg).map(df.agg(_))
+      toColumnOperation(agg).map(df.agg(_))
     case aggs =>
       aggs
-        .traverse(toColumOperation)
+        .traverse(toColumnOperation)
         .map(columns => df.agg(columns.head, columns.tail: _*))
   }
 
   private def evaluateOrder(
       conds: NonEmptyList[ConditionOrder],
-      r: Multiset
-  ): M[Multiset] = {
-    M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
+    M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
       conds
         .map {
           case ASC(VARIABLE(v)) =>
@@ -368,27 +412,27 @@ object Engine {
           case ASC(e) =>
             ExpressionF
               .compile[Expression](e, config)
-              .apply(r.dataframe)
+              .apply(r.relational)
               .map(_.asc)
           case DESC(VARIABLE(v)) =>
             col(v).desc.asRight
           case DESC(e) =>
             ExpressionF
               .compile[Expression](e, config)
-              .apply(r.dataframe)
+              .apply(r.relational)
               .map(_.desc)
         }
         .toList
         .sequence[Either[EngineError, *], Column]
-        .map(columns => r.copy(dataframe = r.dataframe.orderBy(columns: _*)))
+        .map(columns => r.copy(relational = r.relational.orderBy(columns)))
     }
   }
 
   private def evaluateLeftJoin(
-      l: Multiset,
-      r: Multiset,
+      l: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped],
       filters: List[Expression]
-  ): M[Multiset] = {
+  ): M[Multiset[DataFrame @@ Untyped]] = {
     NonEmptyList
       .fromList(filters)
       .map { nelFilters =>
@@ -401,32 +445,40 @@ object Engine {
 
   private def evaluateFilter(
       funcs: NonEmptyList[Expression],
-      expr: Multiset
-  ): M[Multiset] = {
-    val compiledFuncs: M[NonEmptyList[DataFrame => Result[Column]]] =
-      M.ask[Result, Config, Log, DataFrame].map { config =>
+      expr: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
+    val compiledFuncs: M[NonEmptyList[DataFrame @@ Untyped => Result[Column]]] =
+      M.ask[Result, Config, Log, DataFrame @@ Untyped].map { config =>
         funcs.map(t => ExpressionF.compile[Expression](t, config))
       }
 
-    compiledFuncs.flatMapF(_.foldLeft(expr.asRight: Result[Multiset]) {
-      case (eitherAcc, f) =>
-        for {
-          acc       <- eitherAcc
-          filterCol <- f(acc.dataframe)
-          result <-
-            expr
-              .filter(filterCol)
-              .map(r =>
-                expr.copy(dataframe = r.dataframe intersect acc.dataframe)
-              )
-        } yield result
-    })
+    compiledFuncs.flatMapF(
+      _.foldLeft(expr.asRight: Result[Multiset[DataFrame @@ Untyped]]) {
+        case (eitherAcc, f) =>
+          for {
+            acc       <- eitherAcc
+            filterCol <- f(acc.relational)
+            result <-
+              expr
+                .filter(filterCol)
+                .map(r =>
+                  expr.copy(relational = r.relational intersect acc.relational)
+                )
+          } yield result
+      }
+    )
   }
 
-  private def evaluateOffset(offset: Long, r: Multiset): M[Multiset] =
+  private def evaluateOffset(
+      offset: Long,
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
     M.liftF(r.offset(offset))
 
-  private def evaluateLimit(limit: Long, r: Multiset): M[Multiset] =
+  private def evaluateLimit(
+      limit: Long,
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     M.liftF(r.limit(limit))
 
   /** Evaluate a construct expression.
@@ -435,9 +487,12 @@ object Engine {
     * apply a default ordering to all solutions generated by the
     * [[bgp]], so that LIMIT and OFFSET can return meaningful results.
     */
-  private def evaluateConstructPlain(bgp: Expr.BGP, r: Multiset)(implicit
+  private def evaluateConstructPlain(
+      bgp: Expr.BGP,
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit
       sc: SQLContext
-  ): Multiset = {
+  ): Multiset[DataFrame @@ Untyped] = {
 
     // Extracting the triples to something that can be serialized in
     // Spark jobs
@@ -446,55 +501,56 @@ object Engine {
         .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
         .toList
 
-    val df = r.dataframe
-      .flatMap { solution =>
-        val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
-          triple => triple.filter(x => x._1.isBlank).map(_._1)
+    val df = r.relational.flatMap { solution =>
+      val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
+        triple => triple.filter(x => x._1.isBlank).map(_._1)
 
-        val blankNodes: Map[String, String] =
-          templateValues
-            .flatMap(extractBlanks)
-            .distinct
-            .map(blankLabel => (blankLabel.s, ju.UUID.randomUUID().toString()))
-            .toMap
+      val blankNodes: Map[String, String] =
+        templateValues
+          .flatMap(extractBlanks)
+          .distinct
+          .map(blankLabel => (blankLabel.s, ju.UUID.randomUUID().toString()))
+          .toMap
 
-        templateValues.map { triple =>
-          val fields: List[Any] = triple
-            .map({
-              case (VARIABLE(s), pos) =>
-                (solution.get(solution.fieldIndex(s)), pos)
-              case (BLANK(x), pos) =>
-                (blankNodes.get(x).get, pos)
-              case (x, pos) =>
-                (x.s, pos)
-            })
-            .sortBy(_._2)
-            .map(_._1)
+      templateValues.map { triple =>
+        val fields: List[Any] = triple
+          .map({
+            case (VARIABLE(s), pos) =>
+              (solution.get(solution.fieldIndex(s)), pos)
+            case (BLANK(x), pos) =>
+              (blankNodes.get(x).get, pos)
+            case (x, pos) =>
+              (x.s, pos)
+          })
+          .sortBy(_._2)
+          .map(_._1)
 
-          SparkRow.fromSeq(fields)
-        }
+        SparkRow.fromSeq(fields)
       }
-      .distinct()
+    }.distinct
 
-    Multiset(
+    Multiset[DataFrame @@ Untyped](
       Set.empty,
       df
     )
   }
 
-  private def evaluateConstruct(bgp: Expr.BGP, r: Multiset)(implicit
+  private def evaluateConstruct(
+      bgp: Expr.BGP,
+      r: Multiset[DataFrame @@ Untyped]
+  )(implicit
       sc: SQLContext
-  ): M[Multiset] =
+  ): M[Multiset[DataFrame @@ Untyped]] =
     evaluateConstructPlain(bgp, r).pure[M]
 
   private def evaluateBind(
       bindTo: VARIABLE,
       bindFrom: Expression,
-      r: Multiset
-  ): M[Multiset] = {
-    M.ask[Result, Config, Log, DataFrame].flatMapF { config =>
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
+    M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
       val getColumn = ExpressionF.compile(bindFrom, config)
-      getColumn(r.dataframe).map { col =>
+      getColumn(r.relational).map { col =>
         r.withColumn(bindTo, col)
       }
     }
@@ -503,7 +559,7 @@ object Engine {
   private def evaluateTable(
       vars: List[VARIABLE],
       rows: List[Row]
-  )(implicit sc: SQLContext): M[Multiset] = {
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
     def parseRow(totalVars: Seq[VARIABLE], row: Row): SparkRow = {
       SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[String]) { case (acc, v) =>
@@ -522,39 +578,39 @@ object Engine {
         StructField(GRAPH_VARIABLE.s, StringType, false)
     )
 
-    val df = sc.sparkSession.createDataFrame(
-      sc.sparkContext.parallelize(sparkRows),
-      schema
+    val df = @@[DataFrame, Untyped](
+      sc.sparkSession.createDataFrame(
+        sc.sparkContext.parallelize(sparkRows),
+        schema
+      )
     )
 
-    Multiset(
+    Multiset[DataFrame @@ Untyped](
       bindings = (vars :+ VARIABLE(GRAPH_VARIABLE.s)).toSet,
-      dataframe = df
+      relational = df
     )
   }.pure[M]
 
   private def evaluateExists(
       not: Boolean,
-      p: Multiset,
-      r: Multiset
-  ): M[Multiset] = {
-    val cols = p.dataframe.columns intersect r.dataframe.columns
+      p: Multiset[DataFrame @@ Untyped],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] = {
+    val cols = p.relational.columns intersect r.relational.columns
 
     val resultDf = if (!not) {
       // left semi join will return a copy of each row in the left dataframe for which a match is found in
       // the right dataframe. This means that it will detect the presence of matches between the two dataframes.
-      r.dataframe
-        .join(p.dataframe, cols, "leftsemi")
+      r.relational.leftSemi(p.relational, cols)
     } else {
       // left anti join can be defined as the complementary operation of the left semi join. It will return one copy
       // of the left dataframe for which no match is found on the right dataframe. This means that it will
       // detect the absence of a match between the two dataframes.
-      r.dataframe
-        .join(p.dataframe, cols, "leftanti")
+      r.relational.leftAnti(p.relational, cols)
     }
 
     r.copy(
-      dataframe = resultDf
+      relational = resultDf
     ).pure[M]
   }
 }
