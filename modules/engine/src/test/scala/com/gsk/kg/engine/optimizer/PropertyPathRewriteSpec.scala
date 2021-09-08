@@ -1536,6 +1536,8 @@ class PropertyPathRewriteSpec
                   fail(s"Wrong log: ${other.toString}")
               }
 
+              import com.gsk.kg.engine.data.ToTree.ToTreeOps
+
               Fix.un(resultDag) match {
                 case Project(
                       _,
@@ -1543,26 +1545,80 @@ class PropertyPathRewriteSpec
                         _,
                         Join(
                           Join(
-                            Path(sll, ell, oll, gll, true),
-                            Path(slr, elr, olr, glr, true)
+                            Path(_, _, VARIABLE(rndVar1), _, _),
+                            Path(_, _, VARIABLE(rndVar2), _, _)
                           ),
-                          Path(sr, er, or, gr, false)
+                          _
                         )
                       )
                     ) =>
-                  sll shouldEqual VARIABLE("?s")
-                  oll shouldEqual slr
-                  olr shouldEqual sr
-                  or shouldEqual VARIABLE("?o")
-                  ell shouldEqual Uri("<http://xmlns.org/foaf/0.1/knows>")
-                  elr shouldEqual Uri("<http://xmlns.org/foaf/0.1/name>")
-                  er shouldEqual Uri("<http://xmlns.org/foaf/0.1/mbox>")
-                case x =>
-                  fail(x.toString)
+                  resultDag.toTree.drawTree shouldEqual
+                    s"""Project
+                       ||
+                       |+- List
+                       ||  |
+                       ||  +- VARIABLE(?s)
+                       ||  |
+                       ||  `- VARIABLE(?o)
+                       ||
+                       |`- Project
+                       |   |
+                       |   +- List
+                       |   |  |
+                       |   |  +- VARIABLE(?s)
+                       |   |  |
+                       |   |  `- VARIABLE(?o)
+                       |   |
+                       |   `- Join
+                       |      |
+                       |      +- Join
+                       |      |  |
+                       |      |  +- Path
+                       |      |  |  |
+                       |      |  |  +- ?s
+                       |      |  |  |
+                       |      |  |  +- Uri
+                       |      |  |  |  |
+                       |      |  |  |  `- <http://xmlns.org/foaf/0.1/knows>
+                       |      |  |  |
+                       |      |  |  +- $rndVar1
+                       |      |  |  |
+                       |      |  |  +- List(GRAPH_VARIABLE)
+                       |      |  |  |
+                       |      |  |  `- true
+                       |      |  |
+                       |      |  `- Path
+                       |      |     |
+                       |      |     +- $rndVar1
+                       |      |     |
+                       |      |     +- Uri
+                       |      |     |  |
+                       |      |     |  `- <http://xmlns.org/foaf/0.1/name>
+                       |      |     |
+                       |      |     +- $rndVar2
+                       |      |     |
+                       |      |     +- List(GRAPH_VARIABLE)
+                       |      |     |
+                       |      |     `- true
+                       |      |
+                       |      `- Path
+                       |         |
+                       |         +- $rndVar2
+                       |         |
+                       |         +- Uri
+                       |         |  |
+                       |         |  `- <http://xmlns.org/foaf/0.1/mbox>
+                       |         |
+                       |         +- ?o
+                       |         |
+                       |         +- List(GRAPH_VARIABLE)
+                       |         |
+                       |         `- false
+                       |""".stripMargin
+                case _ => fail
               }
 
-            case Left(x) =>
-              fail(x.toString)
+            case Left(e) => fail(e.toString)
           }
         }
     }
