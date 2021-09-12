@@ -20,285 +20,324 @@ import com.gsk.kg.sparqlparser.PropertyExpression._
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
 
-/** This optimization rewrites the DAG for Property Path expressions by performing multiple phases. To explain what
-  * every phase tries to achive lets take a look at some example.
+/** This optimization rewrites the DAG for Property Path expressions by
+  * performing multiple phases. To explain what every phase tries to achive lets
+  * take a look at some example.
   *
   * Here we have some sample query:
   *
   * PREFIX foaf: <http://xmlns.org/foaf/0.1/>
   *
-  * SELECT ?s ?o
-  * WHERE {
-  * ?s (^foaf:knows/^foaf:name/foaf:mbox) ?o .
-  * }
+  * SELECT ?s ?o WHERE { ?s (^foaf:knows/^foaf:name/foaf:mbox) ?o . }
   *
   * With the DAG generated when parsed:
   *
   * Project
   * |
   * +- List
-  * |  |
-  * |  +- VARIABLE(?s)
-  * |  |
-  * |  `- VARIABLE(?o)
+  * | |
+  * | +- VARIABLE(?s)
+  * | |
+  * | `- VARIABLE(?o)
+  * | `- Project
   * |
-  * `- Project
-  *   |
-  *   +- List
-  *   |  |
-  *   |  +- VARIABLE(?s)
-  *   |  |
-  *   |  `- VARIABLE(?o)
-  *   |
-  *   `- Path
-  *      |
-  *      +- ?s
-  *      |
-  *      +- SeqExpression
-  *      |  |
-  *      |  +- SeqExpression
-  *      |  |  |
-  *      |  |  +- Reverse
-  *      |  |  |  |
-  *      |  |  |  `- Uri
-  *      |  |  |     |
-  *      |  |  |     `- <http://xmlns.org/foaf/0.1/knows>
-  *      |  |  |
-  *      |  |  `- Reverse
-  *      |  |     |
-  *      |  |     `- Uri
-  *      |  |        |
-  *      |  |        `- <http://xmlns.org/foaf/0.1/name>
-  *      |  |
-  *      |  `- Uri
-  *      |     |
-  *      |     `- <http://xmlns.org/foaf/0.1/mbox>
-  *      |
-  *      +- ?o
-  *      |
-  *      +- List(GRAPH_VARIABLE)
-  *      |
-  *      `- false
+  * +- List
+  * | |
+  * | +- VARIABLE(?s)
+  * | |
+  * | `- VARIABLE(?o)
+  * | `- Path
+  * |
+  * +- ?s
+  * |
+  * +- SeqExpression
+  * | |
+  * | +- SeqExpression
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- Reverse
+  * |  |  |  |
+  * |:-|:-|:-|
+  * |  |  |  |
+  * `- Uri
+  * |  |  |  |
+  * |:-|:-|:-|
+  * |  |  |  |
+  * `- <http://xmlns.org/foaf/0.1/knows>
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- Reverse
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- Uri
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- <http://xmlns.org/foaf/0.1/name>
+  * | |
+  * | `- Uri
+  * | |
+  * | `- <http://xmlns.org/foaf/0.1/mbox>
+  * |
+  * +- ?o
+  * |
+  * +- List(GRAPH_VARIABLE)
+  * | `- false
   *
-  * 1. Reverse pushdown
-  * In first place we remove the upper Path expression and all Reverse(pe: PropertyExpression) are pushed down into
-  * all the nested Property Expressions until it finds a Uri(s: String) PropertyExpression.
-  * This is done by a futumorphism (top-down) that allows to accumulate evaluations done before pushing down the
-  * Reverse recursively:
+  *   1. Reverse pushdown In first place we remove the upper Path expression and
+  *      all Reverse(pe: PropertyExpression) are pushed down into all the nested
+  *      Property Expressions until it finds a Uri(s: String)
+  *      PropertyExpression. This is done by a futumorphism (top-down) that
+  *      allows to accumulate evaluations done before pushing down the Reverse
+  *      recursively:
   *
   * SeqExpression
   * |
   * +- SeqExpression
-  * |  |
-  * |  +- Reverse
+  * | |
+  * | +- Reverse
   * |  |  |
-  * |  |  `- Uri
-  * |  |     |
-  * |  |     `- <http://xmlns.org/foaf/0.1/knows>
-  * |  |
-  * |  `- Reverse
-  * |     |
-  * |     `- Uri
-  * |        |
-  * |        `- <http://xmlns.org/foaf/0.1/name>
-  * |
+  * |:-|:-|
+  * |  |  |
   * `- Uri
-  *   |
-  *   `- <http://xmlns.org/foaf/0.1/mbox>
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- <http://xmlns.org/foaf/0.1/knows>
+  * | |
+  * | `- Reverse
+  * | |
+  * | `- Uri
+  * | |
+  * | `- <http://xmlns.org/foaf/0.1/name>
+  * | `- Uri
+  * | `- <http://xmlns.org/foaf/0.1/mbox>
   *
-  * 2.PropertyExpression replacements.
-  * In the next phase what we do are some replacements on some PropertyExpressions, as follow:
-  * - For every Uri expression we replace with a Path expression with reverse field set to false, or if we found
-  * a Reverse(Uri) we replace it with a Path with reverse field set to true.
-  * - For every SeqExpression we replace for a Join.
-  * - For every Alternative we replace with a Union.
-  * This phase is done with a anamorphism (top-down) because we need to match Reverse(Uri) before Uri.
+  * 2.PropertyExpression replacements. In the next phase what we do are some
+  * replacements on some PropertyExpressions, as follow:
+  *   - For every Uri expression we replace with a Path expression with reverse
+  *     field set to false, or if we found a Reverse(Uri) we replace it with a
+  *     Path with reverse field set to true.
+  *   - For every SeqExpression we replace for a Join.
+  *   - For every Alternative we replace with a Union. This phase is done with a
+  *     anamorphism (top-down) because we need to match Reverse(Uri) before Uri.
   *
   * Join
   * |
   * +- Join
-  * |  |
-  * |  +- Path
+  * | |
+  * | +- Path
   * |  |  |
-  * |  |  +- ?s
+  * |:-|:-|
   * |  |  |
-  * |  |  +- Uri
+  * +- ?s
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- Uri
   * |  |  |  |
-  * |  |  |  `- <http://xmlns.org/foaf/0.1/knows>
+  * |:-|:-|:-|
+  * |  |  |  |
+  * `- <http://xmlns.org/foaf/0.1/knows>
   * |  |  |
-  * |  |  +- ?o
+  * |:-|:-|
   * |  |  |
-  * |  |  +- List(GRAPH_VARIABLE)
+  * +- ?o
   * |  |  |
-  * |  |  `- true
-  * |  |
-  * |  `- Path
-  * |     |
-  * |     +- ?s
-  * |     |
-  * |     +- Uri
-  * |     |  |
-  * |     |  `- <http://xmlns.org/foaf/0.1/name>
-  * |     |
-  * |     +- ?o
-  * |     |
-  * |     +- List(GRAPH_VARIABLE)
-  * |     |
-  * |     `- true
+  * |:-|:-|
+  * |  |  |
+  * +- List(GRAPH_VARIABLE)
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- true
+  * | |
+  * | `- Path
+  * | |
+  * | +- ?s
+  * | |
+  * | +- Uri
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- <http://xmlns.org/foaf/0.1/name>
+  * | |
+  * | +- ?o
+  * | |
+  * | +- List(GRAPH_VARIABLE)
+  * | |
+  * | `- true
+  * | `- Path
   * |
-  * `- Path
-  *   |
-  *   +- ?s
-  *   |
-  *   +- Uri
-  *   |  |
-  *   |  `- <http://xmlns.org/foaf/0.1/mbox>
-  *   |
-  *   +- ?o
-  *   |
-  *   +- List(GRAPH_VARIABLE)
-  *   |
-  *   `- false
+  * +- ?s
+  * |
+  * +- Uri
+  * | |
+  * | `- <http://xmlns.org/foaf/0.1/mbox>
+  * |
+  * +- ?o
+  * |
+  * +- List(GRAPH_VARIABLE)
+  * | `- false
   *
-  * 3.Chain variables replacement.
-  * The last phase is only needed if we have Join expressions from the previous phase. This is because we now that
-  * this query, for example this query:
+  * 3.Chain variables replacement. The last phase is only needed if we have Join
+  * expressions from the previous phase. This is because we now that this query,
+  * for example this query:
   *
   * PREFIX foaf: <http://xmlns.org/foaf/0.1/>
   *
-  * SELECT ?s ?o
-  * WHERE {
-  * ?s foaf:knows/foaf:name ?o .
-  * }
+  * SELECT ?s ?o WHERE { ?s foaf:knows/foaf:name ?o . }
   *
   * Is equivalent to this other one:
   *
   * PREFIX foaf: <http://xmlns.org/foaf/0.1/>
   *
-  * SELECT ?s ?o
-  * WHERE {
-  * ?s foaf:knows ?x1 .
-  * ?x1 foaf:name ?o .
-  * }
+  * SELECT ?s ?o WHERE { ?s foaf:knows ?x1 . ?x1 foaf:name ?o . }
   *
-  * Taking a closer look we can see that there is an intermediate variable ?x1 that has to be replaced,
-  * so this is the idea of this phase.
+  * Taking a closer look we can see that there is an intermediate variable ?x1
+  * that has to be replaced, so this is the idea of this phase.
   *
-  * So, in case we found Join expression, we should create an intermediate variable and replace it for the 'object'
-  * variable from the Path of the left of the Join and the 'subject' of the right Path of the Join and we keep doing
-  * this between nested joins.
-  * This phase is done with an histomorphism (down-top) that will allow to accumulate the result of evaluations done
+  * So, in case we found Join expression, we should create an intermediate
+  * variable and replace it for the 'object' variable from the Path of the left
+  * of the Join and the 'subject' of the right Path of the Join and we keep
+  * doing this between nested joins. This phase is done with an histomorphism
+  * (down-top) that will allow to accumulate the result of evaluations done
   * previously in subtrees.
   *
   * Join
   * |
   * +- Join
-  * |  |
-  * |  +- Path
+  * | |
+  * | +- Path
   * |  |  |
-  * |  |  +- ?s
+  * |:-|:-|
   * |  |  |
-  * |  |  +- Uri
+  * +- ?s
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- Uri
   * |  |  |  |
-  * |  |  |  `- <http://xmlns.org/foaf/0.1/knows>
+  * |:-|:-|:-|
+  * |  |  |  |
+  * `- <http://xmlns.org/foaf/0.1/knows>
   * |  |  |
-  * |  |  +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
+  * |:-|:-|
   * |  |  |
-  * |  |  +- List(GRAPH_VARIABLE)
+  * +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
   * |  |  |
-  * |  |  `- true
-  * |  |
-  * |  `- Path
-  * |     |
-  * |     +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
-  * |     |
-  * |     +- Uri
-  * |     |  |
-  * |     |  `- <http://xmlns.org/foaf/0.1/name>
-  * |     |
-  * |     +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
-  * |     |
-  * |     +- List(GRAPH_VARIABLE)
-  * |     |
-  * |     `- true
+  * |:-|:-|
+  * |  |  |
+  * +- List(GRAPH_VARIABLE)
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- true
+  * | |
+  * | `- Path
+  * | |
+  * | +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
+  * | |
+  * | +- Uri
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- <http://xmlns.org/foaf/0.1/name>
+  * | |
+  * | +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
+  * | |
+  * | +- List(GRAPH_VARIABLE)
+  * | |
+  * | `- true
+  * | `- Path
   * |
-  * `- Path
-  *   |
-  *   +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
-  *   |
-  *   +- Uri
-  *   |  |
-  *   |  `- <http://xmlns.org/foaf/0.1/mbox>
-  *   |
-  *   +- ?o
-  *   |
-  *   +- List(GRAPH_VARIABLE)
-  *   |
-  *   `- false
+  * +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
+  * |
+  * +- Uri
+  * | |
+  * | `- <http://xmlns.org/foaf/0.1/mbox>
+  * |
+  * +- ?o
+  * |
+  * +- List(GRAPH_VARIABLE)
+  * | `- false
   *
   * Finally we can see the hole DAG replaced:
   *
   * Project
   * |
   * +- List
-  * |  |
-  * |  +- VARIABLE(?s)
-  * |  |
-  * |  `- VARIABLE(?o)
+  * | |
+  * | +- VARIABLE(?s)
+  * | |
+  * | `- VARIABLE(?o)
+  * | `- Project
   * |
-  * `- Project
-  *   |
-  *   +- List
-  *   |  |
-  *   |  +- VARIABLE(?s)
-  *   |  |
-  *   |  `- VARIABLE(?o)
-  *   |
-  *   `- Join
-  *      |
-  *      +- Join
-  *      |  |
-  *      |  +- Path
-  *      |  |  |
-  *      |  |  +- ?s
-  *      |  |  |
-  *      |  |  +- Uri
-  *      |  |  |  |
-  *      |  |  |  `- <http://xmlns.org/foaf/0.1/knows>
-  *      |  |  |
-  *      |  |  +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
-  *      |  |  |
-  *      |  |  +- List(GRAPH_VARIABLE)
-  *      |  |  |
-  *      |  |  `- true
-  *      |  |
-  *      |  `- Path
-  *      |     |
-  *      |     +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
-  *      |     |
-  *      |     +- Uri
-  *      |     |  |
-  *      |     |  `- <http://xmlns.org/foaf/0.1/name>
-  *      |     |
-  *      |     +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
-  *      |     |
-  *      |     +- List(GRAPH_VARIABLE)
-  *      |     |
-  *      |     `- true
-  *      |
-  *      `- Path
-  *         |
-  *         +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
-  *         |
-  *         +- Uri
-  *         |  |
-  *         |  `- <http://xmlns.org/foaf/0.1/mbox>
-  *         |
-  *         +- ?o
-  *         |
-  *         +- List(GRAPH_VARIABLE)
-  *         |
-  *         `- false
+  * +- List
+  * | |
+  * | +- VARIABLE(?s)
+  * | |
+  * | `- VARIABLE(?o)
+  * | `- Join
+  * |
+  * +- Join
+  * | |
+  * | +- Path
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- ?s
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- Uri
+  * |  |  |  |
+  * |:-|:-|:-|
+  * |  |  |  |
+  * `- <http://xmlns.org/foaf/0.1/knows>
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * +- List(GRAPH_VARIABLE)
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- true
+  * | |
+  * | `- Path
+  * | |
+  * | +- ?_2e2f67aa-628b-4645-9bd3-4b497cabe759
+  * | |
+  * | +- Uri
+  * |  |  |
+  * |:-|:-|
+  * |  |  |
+  * `- <http://xmlns.org/foaf/0.1/name>
+  * | |
+  * | +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
+  * | |
+  * | +- List(GRAPH_VARIABLE)
+  * | |
+  * | `- true
+  * | `- Path
+  * |
+  * +- ?_baceb4e4-3ae5-4c74-9a72-36786c609e84
+  * |
+  * +- Uri
+  * | |
+  * | `- <http://xmlns.org/foaf/0.1/mbox>
+  * |
+  * +- ?o
+  * |
+  * +- List(GRAPH_VARIABLE)
+  * | `- false
   */
 object PropertyPathRewrite {
 

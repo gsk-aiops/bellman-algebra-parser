@@ -12,8 +12,8 @@ import com.gsk.kg.engine.data.ToTree._
 
 import scala.collection.immutable.Nil
 
-/** A data structure like a linked [[scala.List]] but in which nodes
-  * can be [[ChunkedList.Chunk]]s of elements.
+/** A data structure like a linked [[scala.List]] but in which nodes can be
+  * [[ChunkedList.Chunk]] s of elements.
   */
 @deriveTraverse trait ChunkedList[A] {
 

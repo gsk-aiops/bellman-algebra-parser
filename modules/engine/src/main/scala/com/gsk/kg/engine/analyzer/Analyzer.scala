@@ -21,8 +21,8 @@ object Analyzer {
   def rules[T: Basis[DAG, *]]: List[Rule[T]] =
     List(FindUnboundVariables[T])
 
-  /** Execute all rules in [[Analyzer.rules]] and accumulate errors
-    * that they may throw.
+  /** Execute all rules in [[Analyzer.rules]] and accumulate errors that they
+    * may throw.
     *
     * In case no errors are returned, the
     *

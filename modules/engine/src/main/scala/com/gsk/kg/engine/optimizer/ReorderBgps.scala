@@ -14,18 +14,17 @@ import quiver._
 
 object ReorderBgps {
 
-  /** This optimization reorders the triples inside a BGP so that we
-    * minimize the number of cross joins.
+  /** This optimization reorders the triples inside a BGP so that we minimize
+    * the number of cross joins.
     *
-    * The idea is that we put next to each other triples that share
-    * variables, since triples that don't end up in cross joins.
+    * The idea is that we put next to each other triples that share variables,
+    * since triples that don't end up in cross joins.
     *
-    * In order to do that we create a [[quiver.Graph]] of triples in
-    * which nodes are triples, and edges exists when these triples
-    * share variables.
+    * In order to do that we create a [[quiver.Graph]] of triples in which nodes
+    * are triples, and edges exists when these triples share variables.
     *
-    * Later on, in order to regenerate the list of triples, we perform
-    * a BFS starting from the first triple in the BGP.
+    * Later on, in order to regenerate the list of triples, we perform a BFS
+    * starting from the first triple in the BGP.
     *
     * @param dag
     * @return

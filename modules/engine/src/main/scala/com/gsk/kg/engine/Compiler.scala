@@ -88,7 +88,8 @@ object Compiler {
     * +-------------+
     * }}}
     *
-    * @param sc Spark's [[SQLContext]], required for the engine to run
+    * @param sc
+    *   Spark's [[SQLContext]], required for the engine to run
     * @return
     */
   private def compiler[T: Basis[DAG, *]](implicit
@@ -116,8 +117,7 @@ object Compiler {
       } yield dag
     }
 
-  /** The engine phase receives a query and applies it to the given
-    * dataframe
+  /** The engine phase receives a query and applies it to the given dataframe
     *
     * @param df
     * @param sc
