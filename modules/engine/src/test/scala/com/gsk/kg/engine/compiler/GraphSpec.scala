@@ -1833,5 +1833,81 @@ class GraphSpec
         result.right.get.collect.toSet shouldEqual Set()
       }
     }
+
+    "filter by graph with graph variable" in {
+
+      import sqlContext.implicits._
+
+      val df: DataFrame = List(
+        // Alice graph
+        (
+          "<http://example.org/Alice>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Bob>",
+          "<http://graph.org/alice>"
+        ),
+        (
+          "<http://example.org/Alice>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Charles>",
+          "<http://graph.org/alice>"
+        ),
+        // Bob graph
+        (
+          "<http://example.org/Bob>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Charles>",
+          "<http://graph.org/bob>"
+        ),
+        (
+          "<http://example.org/Bob>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Eduard>",
+          "<http://graph.org/bob>"
+        )
+      ).toDF("s", "p", "o", "g")
+
+      val query =
+        """
+          |PREFIX graph: <http://graph.org/>
+          |
+          |SELECT ?s ?p ?o
+          |FROM <http://graph.org/alice>
+          |FROM NAMED <http://graph.org/bob>
+          |WHERE 
+          |{
+          |  {?s ?p ?o}
+          |  UNION
+          |  { 
+          |    GRAPH ?g {
+          |      { ?s ?p ?o }
+          |    }
+          |  }
+          |  FILTER (?g = URI(<http://graph.org/alice>))
+          |}
+          |""".stripMargin
+
+      val result =
+        Compiler.compile(
+          df,
+          query,
+          config
+        )
+
+      result shouldBe a[Right[_, _]]
+      result.right.get.collect.length shouldEqual 2
+      result.right.get.collect.toSet shouldEqual Set(
+        Row(
+          "<http://example.org/Alice>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Bob>"
+        ),
+        Row(
+          "<http://example.org/Alice>",
+          "<http://xmlns.com/foaf/0.1/knows>",
+          "<http://example.org/Charles>"
+        )
+      )
+    }
   }
 }

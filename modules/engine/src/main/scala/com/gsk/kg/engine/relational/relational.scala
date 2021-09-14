@@ -54,6 +54,7 @@ import simulacrum.typeclass
   def map[U: Encoder](df: A, fn: Row => U): A
   def flatMap[U: Encoder](df: A, fn: Row => TraversableOnce[U]): A
   def collect(df: A): Array[Row]
+  def show(df: A, truncate: Boolean): Unit
   def toDataFrame(df: A): DataFrame
 }
 
@@ -254,6 +255,9 @@ trait RelationalInstances {
 
       def collect(df: DataFrame @@ Untyped): Array[Row] =
         df.unwrap.collect()
+
+      def show(df: DataFrame @@ Untyped, truncate: Boolean): Unit =
+        df.unwrap.show(truncate)
 
       def toDataFrame(df: DataFrame @@ Untyped): DataFrame =
         df.unwrap

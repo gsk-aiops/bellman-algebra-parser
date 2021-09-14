@@ -221,7 +221,15 @@ object Engine {
   ): M[Multiset[DataFrame @@ Untyped]] = {
     val bindings =
       expr.bindings.filter(_.s != GRAPH_VARIABLE.s) + VARIABLE(graph)
-    val df = expr.relational.withColumn(graph, col(GRAPH_VARIABLE.s))
+
+    val graphColumnMetadata =
+      new MetadataBuilder().putString("graph_column_name", graph).build()
+    val updatedGraphCol =
+      col(GRAPH_VARIABLE.s).as("graph_column", graphColumnMetadata)
+
+    val df = expr.relational
+      .withColumn(graph, updatedGraphCol)
+
     Multiset[DataFrame @@ Untyped](
       bindings,
       df
