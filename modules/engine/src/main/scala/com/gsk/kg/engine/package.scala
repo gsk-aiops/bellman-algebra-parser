@@ -91,8 +91,8 @@ package object engine {
   type M[A] = ReaderWriterStateT[Result, Config, Log, DataFrame @@ Untyped, A]
   val M = ReaderWriterStateT
 
-  /** [[Phase]] represents a phase in the compiler.  It's parametrized
-    * on the input type [[A]] and the output type [[B]].
+  /** [[Phase]] represents a phase in the compiler. It's parametrized on the
+    * input type [[A]] and the output type [[B]].
     */
   type Phase[A, B] = Kleisli[M, A, B]
   val Phase = Kleisli

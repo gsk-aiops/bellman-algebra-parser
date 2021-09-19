@@ -164,10 +164,10 @@ trait DataFrameImplicits {
       )
   }
 
-  /** Generate valid **very random** DataFrames representing N-Triples
-    * files.
+  /** Generate valid **very random** DataFrames representing N-Triples files.
     *
-    * @param sc an implicit [[SQLContext]] is required to convert to [[DataFrame]]
+    * @param sc
+    *   an implicit [[SQLContext]] is required to convert to [[DataFrame]]
     * @return
     */
   implicit def dataFrameGenerator(implicit
