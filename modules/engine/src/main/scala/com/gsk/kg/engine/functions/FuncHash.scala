@@ -10,7 +10,8 @@ object FuncHash {
 
   /** Implementation of SparQL MD5 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-md5]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-md5]]
     * @param col
     * @return
     */
@@ -19,7 +20,8 @@ object FuncHash {
 
   /** Implementation of SparQL MD5 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-md5]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-md5]]
     * @param str
     * @return
     */
@@ -28,7 +30,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA1 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha1]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha1]]
     * @param col
     * @return
     */
@@ -37,7 +40,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA1 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha1]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha1]]
     * @param str
     * @return
     */
@@ -46,7 +50,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA256 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha256]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha256]]
     * @param col
     * @return
     */
@@ -57,7 +62,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA256 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha256]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha256]]
     * @param str
     * @return
     */
@@ -68,7 +74,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA384 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha384]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha384]]
     * @param col
     * @return
     */
@@ -79,7 +86,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA384 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha384]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha384]]
     * @param str
     * @return
     */
@@ -90,7 +98,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA512 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha512]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha512]]
     * @param col
     * @return
     */
@@ -101,7 +110,8 @@ object FuncHash {
 
   /** Implementation of SparQL SHA512 on Spark dataframes.
     *
-    * @see [[https://www.w3.org/TR/sparql11-query/#func-sha512]]
+    * @see
+    *   [[https://www.w3.org/TR/sparql11-query/#func-sha512]]
     * @param str
     * @return
     */

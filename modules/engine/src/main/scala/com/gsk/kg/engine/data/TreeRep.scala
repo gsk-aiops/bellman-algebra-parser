@@ -4,7 +4,8 @@ import cats.Show
 import cats.free.Trampoline
 import cats.instances.function._
 
-/** A generic tree representation.  It's particularly useful for its [[draw]] method.
+/** A generic tree representation. It's particularly useful for its [[draw]]
+  * method.
   *
   * ported from scalaz.Tree
   */
@@ -18,8 +19,8 @@ sealed trait TreeRep[A] {
 
   def drawTree(implicit ev: Show[A]): String = {
     val reversedLines: Vector[StringBuilder] = draw.run
-    val first                                = new StringBuilder(reversedLines.head.toString.reverse)
-    val rest                                 = reversedLines.tail
+    val first = new StringBuilder(reversedLines.head.toString.reverse)
+    val rest  = reversedLines.tail
     rest
       .foldLeft(first) { (acc, elem) =>
         acc.append("\n").append(elem.toString.reverse)
@@ -28,9 +29,8 @@ sealed trait TreeRep[A] {
       .toString
   }
 
-  /** A 2D String representation of this Tree, separated into lines.
-    * Uses reversed StringBuilders for performance, because they are
-    * prepended to.
+  /** A 2D String representation of this Tree, separated into lines. Uses
+    * reversed StringBuilders for performance, because they are prepended to.
     */
   private def draw(implicit ev: Show[A]): Trampoline[Vector[StringBuilder]] = {
     import Trampoline._

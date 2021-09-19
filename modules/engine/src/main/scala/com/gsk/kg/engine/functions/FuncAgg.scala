@@ -12,8 +12,8 @@ import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 object FuncAgg {
 
-  /** Sample is a set function which returns an arbitrary value from
-    * the Multiset[A] passed to it.
+  /** Sample is a set function which returns an arbitrary value from the
+    * Multiset[A] passed to it.
     *
     * Implemented using [[org.apache.spark.sql.functions.first]].
     *
@@ -66,7 +66,8 @@ object FuncAgg {
     )
   }
 
-  /** This function calculates the minimum of a group when numeric or other literals like strings
+  /** This function calculates the minimum of a group when numeric or other
+    * literals like strings
     * @param col
     * @return
     */
@@ -86,7 +87,8 @@ object FuncAgg {
     )
   }
 
-  /** This funciton calculates the maximum of a group when numeric or other literals like strings
+  /** This funciton calculates the maximum of a group when numeric or other
+    * literals like strings
     * @param col
     * @return
     */
