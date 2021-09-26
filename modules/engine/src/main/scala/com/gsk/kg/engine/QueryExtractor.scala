@@ -66,7 +66,7 @@ object QueryExtractor {
       case JoinF(l, r)                       => l ++ r
       case LeftJoinF(l, r)                   => l ++ r
       case ProjectF(vars, r)                 => r
-      case PathF(s, p, o, g)                 => Nil
+      case PathF(s, p, o, g, _)              => Nil
       case QuadF(s, p, o, g)                 => Nil
       case DistinctF(r)                      => r
       case ReducedF(r)                       => r
@@ -116,13 +116,14 @@ object QueryExtractor {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal]
+      g: List[StringVal],
+      reverse: Boolean
   ): String =
     // TODO: Implement PropertyExpressionToString algebra
 //    val propertyPathAlgebra: Algebra[PropertyPathF, String] = ???
 //    val propertyPathString = scheme.cata(propertyPathAlgebra)
 //    s"(path ${s.s} ${propertyPathString(p)} ${o.s})"
-    s"(path s p o g)"
+    s"(path s p o g reverse)"
 
   private def printStringVal(vars: Seq[StringVal]) =
     vars.map(_.s).mkString(" ")
@@ -298,18 +299,18 @@ object QueryExtractor {
         s"(extend ((${bindTo.s} ${printExpression(bindFrom)})) $r)"
       case FilteredLeftJoinF(l, r, f) =>
         s"(optional $l $r (filter ${f.map(printExpression).mkString(", ")}))"
-      case UnionF(l, r)          => s"(union $l $r)"
-      case SequenceF(bps)        => s"(sequence ${bps.mkString("\n")})"
-      case BGPF(quads)           => "(bgp " ++ quads.map(printQuad).mkString("\n") ++ ")"
-      case GraphF(g, e)          => s"(graph <${getCleanUri(g)}> $e)"
-      case JoinF(l, r)           => s"(join $l $r)"
-      case LeftJoinF(l, r)       => s"(leftjoin $l $r)"
-      case ProjectF(vars, r)     => r
-      case PathF(s, p, o, g)     => printPath(s, p, o, g)
-      case QuadF(s, p, o, g)     => s"(quadf s p o g)"
-      case DistinctF(r)          => s"(distinct $r)"
-      case ReducedF(r)           => s"(reduced $r)"
-      case GroupF(vars, func, r) => s"(group (${printStringVal(vars)}) $r)"
+      case UnionF(l, r)           => s"(union $l $r)"
+      case SequenceF(bps)         => s"(sequence ${bps.mkString("\n")})"
+      case BGPF(quads)            => "(bgp " ++ quads.map(printQuad).mkString("\n") ++ ")"
+      case GraphF(g, e)           => s"(graph <${getCleanUri(g)}> $e)"
+      case JoinF(l, r)            => s"(join $l $r)"
+      case LeftJoinF(l, r)        => s"(leftjoin $l $r)"
+      case ProjectF(vars, r)      => r
+      case PathF(s, p, o, g, rev) => printPath(s, p, o, g, rev)
+      case QuadF(s, p, o, g)      => s"(quadf s p o g)"
+      case DistinctF(r)           => s"(distinct $r)"
+      case ReducedF(r)            => s"(reduced $r)"
+      case GroupF(vars, func, r)  => s"(group (${printStringVal(vars)}) $r)"
       case OrderF(conds, r) =>
         s"(order (${conds.asInstanceOf[Seq[Expression]].map(printExpression).mkString(" ")}) $r)"
       case OffsetLimitF(None, None, r)       => r

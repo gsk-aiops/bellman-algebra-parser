@@ -69,6 +69,8 @@ object PathFrame {
   val PIdx = 2
   val OIdx = 3
 
+  val (sCol, pCol, oCol, gCol) = ("s", "p", "o", "g")
+
   /** It receives a base dataframe with all triples of the graph and creates a new dataframe which will contain all
     * existing paths. This is done by iterating and accumulating results for every new depth level until there are no
     * more triples to connect or it reaches some limit.
@@ -100,9 +102,9 @@ object PathFrame {
       val stepAcc = accPaths
         .leftOuter(
           stepPath,
-          Seq(s"${stepSlice(SIdx)}")
+          Seq(s"${stepSlice(SIdx)}", gCol)
         )
-        .select(stepColNames.map(col))
+        .select(stepColNames.map(col) :+ col(gCol))
 
       val continueTraversing = !stepAcc
         .filter(stepAcc.getColumn(s"${stepSlice(OIdx)}").isNotNull)
@@ -128,10 +130,9 @@ object PathFrame {
     */
   def getOneLengthPaths(df: DataFrame @@ Untyped): PathFrame = {
     df
-      .drop("g")
-      .withColumnRenamed("s", s"$SIdx")
-      .withColumnRenamed("p", s"$PIdx")
-      .withColumnRenamed("o", s"$OIdx")
+      .withColumnRenamed(sCol, s"$SIdx")
+      .withColumnRenamed(pCol, s"$PIdx")
+      .withColumnRenamed(oCol, s"$OIdx")
   }
 
   /** This function a PathFrame with all the vertex that points to itself (0 length path),
@@ -140,16 +141,19 @@ object PathFrame {
     * @return
     */
   def getZeroLengthPaths(df: DataFrame @@ Untyped): PathFrame = {
-    val sDf = df.select(Seq(col("s")))
-    val oDf = df.select(Seq(col("o")))
+    val sDf = df.select(Seq(col(sCol), col(gCol)))
+    val oDf = df.select(Seq(col(oCol), col(gCol)))
 
-    val vertices = sDf.union(oDf).distinct
+    val vertices = sDf
+      .union(oDf)
+      .distinct
+
     vertices
-      .withColumn("p", nullLiteral)
-      .withColumn("o", vertices.getColumn("s"))
-      .withColumnRenamed("s", s"$SIdx")
-      .withColumnRenamed("p", s"$PIdx")
-      .withColumnRenamed("o", s"$OIdx")
+      .withColumn(pCol, nullLiteral)
+      .withColumn(oCol, vertices.getColumn(sCol))
+      .withColumnRenamed(sCol, s"$SIdx")
+      .withColumnRenamed(pCol, s"$PIdx")
+      .withColumnRenamed(oCol, s"$OIdx")
   }
 
   /** This function will return the n paths length triples from a given PathFrame.
@@ -170,7 +174,7 @@ object PathFrame {
 
       val oSlice = OIdx + (2 * (nPath - 1))
 
-      val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString)
+      val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString) :+ gCol
 
       val nPaths = pathFrame
         .select(cols.map(col))
@@ -220,22 +224,15 @@ object PathFrame {
       df.getColumn(path)
     ).isSuccess
 
-    val df = Seq((SIdx, "s"), (PIdx, "p"), (OIdx, "o")).foldLeft(pf) {
-      case (accDf, (idx, name)) =>
+    Seq((SIdx, sCol), (PIdx, pCol), (OIdx, oCol), (gCol, gCol))
+      .foldLeft(pf) { case (accDf, (idx, name)) =>
         if (hasColumn(accDf, idx.toString)) {
           accDf.withColumnRenamed(idx.toString, name)
         } else {
           accDf.withColumn(name, nullLiteral)
         }
-    }
-
-    // TODO: The graph column should be propagated across the PathFrame instead of added to default graph
-    // See: GSK issue AIPL-3665
-    if (hasColumn(df, "g")) {
-      df
-    } else {
-      df.withColumn("g", lit(""))
-    }
+      }
+      .select(Seq(col(sCol), col(pCol), col(oCol), col(gCol)))
   }
 
   implicit def monoid(implicit

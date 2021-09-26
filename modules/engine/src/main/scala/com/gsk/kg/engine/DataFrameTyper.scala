@@ -21,6 +21,12 @@ object Tokens {
 
 trait RdfType {
   val repr: Column
+
+  def apply(value: Column): Column =
+    apply(value, lit(null)) // scalastyle:off
+
+  def apply(value: Column, lang: Column): Column =
+    DataFrameTyper.createRecord(value.cast(StringType), repr, lang)
 }
 
 object RdfType {
@@ -29,11 +35,14 @@ object RdfType {
   }
 
   case object Uri extends RdfType {
-    val repr = lit("uri")
+    val repr = lit("http://www.w3.org/2001/XMLSchema#anyURI")
   }
 
   case object Boolean extends RdfType {
     val repr = lit("http://www.w3.org/2001/XMLSchema#boolean")
+
+    val False = Boolean(lit(false))
+    val True  = Boolean(lit(true))
   }
 
   case object Int extends RdfType {
@@ -48,12 +57,32 @@ object RdfType {
     val repr = lit("http://www.w3.org/2001/XMLSchema#decimal")
   }
 
+  case object Float extends RdfType {
+    val repr = lit("http://www.w3.org/2001/XMLSchema#float")
+  }
+
+  case object DateTime extends RdfType {
+    val repr = lit("http://www.w3.org/2001/XMLSchema#datetime")
+  }
+
   case object Blank extends RdfType {
     val repr = lit("blank")
   }
 
+  case object Numeric extends RdfType {
+    val repr = lit("http://www.w3.org/2001/XMLSchema#numeric")
+  }
+
   final case class Literal(str: String) extends RdfType {
     val repr = lit(str)
+  }
+
+  final case class SparkType(tpe: DataType) extends RdfType {
+    val repr: Column = lit(tpe.simpleString)
+  }
+
+  case object Null extends RdfType {
+    val repr: Column = lit(NullType.simpleString)
   }
 }
 
@@ -78,8 +107,12 @@ object DataFrameTyper {
       acc.withColumn(column, transform(df(column)))
     }
 
-  def parse(col: Column): Column =
+  val NullLiteral = RdfType.Null(lit(null))
+  def parse(col: Column): Column = {
     when(
+      col.isNull,
+      NullLiteral
+    ).when(
       RdfFormatter.isUri(col),
       createRecord(
         rtrim(ltrim(col, Tokens.openAngleBracket), Tokens.closingAngleBracket),
@@ -114,7 +147,7 @@ object DataFrameTyper {
         tpe = RdfType.Boolean.repr
       )
     ).when(
-      RdfFormatter.isNumber(col) && col.contains("e"),
+      RdfFormatter.isNumber(col) && (col.contains("e") || col.contains("E")),
       createRecord(
         value = col,
         tpe = RdfType.Double.repr
@@ -138,6 +171,7 @@ object DataFrameTyper {
         RdfType.Blank.repr
       )
     )
+  }
 
   // scalafix:off
   def createRecord(

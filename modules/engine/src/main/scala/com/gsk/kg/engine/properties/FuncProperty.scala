@@ -13,7 +13,6 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
-import com.gsk.kg.engine.functions.FuncForms
 import com.gsk.kg.engine.functions.PathFrame._
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
@@ -21,77 +20,6 @@ import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 
 object FuncProperty {
-
-  def alternative(
-      df: DataFrame @@ Untyped,
-      pel: ColOrDf,
-      per: ColOrDf
-  ): Result[ColOrDf] = {
-    val col = df.getColumn("p")
-
-    (pel, per) match {
-      case (Left(l), Left(r)) =>
-        Left(
-          when(
-            col.startsWith("\"") && col.endsWith("\""),
-            FuncForms.equals(trim(col, "\""), l) ||
-              FuncForms.equals(trim(col, "\""), r)
-          ).otherwise(
-            FuncForms.equals(col, l) ||
-              FuncForms.equals(col, r)
-          )
-        ).asRight
-      case _ =>
-        EngineError
-          .InvalidPropertyPathArguments(
-            s"Invalid arguments on property path: seq, pel: ${pel.toString}, per: ${per.toString}," +
-              s" both should be of type column"
-          )
-          .asLeft
-    }
-  }
-
-  def seq(
-      df: DataFrame @@ Untyped,
-      pel: ColOrDf,
-      per: ColOrDf
-  ): Result[ColOrDf] = {
-
-    val resultL: Result[DataFrame @@ Untyped] = (pel match {
-      case Left(col)    => df.filter(df.getColumn("p") === col)
-      case Right(accDf) => accDf
-    })
-      .withColumnRenamed("s", "sl")
-      .withColumnRenamed("p", "pl")
-      .withColumnRenamed("o", "ol")
-      .asRight[EngineError]
-
-    val resultR: Result[DataFrame @@ Untyped] = (per match {
-      case Left(col) =>
-        df.filter(df.getColumn("p") === col)
-      case Right(df) =>
-        df
-    }).withColumnRenamed("s", "sr")
-      .withColumnRenamed("p", "pr")
-      .withColumnRenamed("o", "or")
-      .asRight[EngineError]
-
-    for {
-      l <- resultL
-      r <- resultR
-    } yield {
-      Right(
-        l
-          .innerJoin(
-            r,
-            l.getColumn("ol") <=> r.getColumn("sr")
-          )
-          .select(Seq(l.getColumn("sl"), r.getColumn("or")))
-          .withColumnRenamed("sl", "s")
-          .withColumnRenamed("or", "o")
-      )
-    }
-  }
 
   def betweenNAndM(
       df: DataFrame @@ Untyped,
@@ -129,7 +57,7 @@ object FuncProperty {
     checkArgs.flatMap { case (effectiveN, effectiveM) =>
       val onePaths = getOneLengthPaths(e match {
         case Right(predDf) => predDf
-        case Left(predCol) => df.filter(predCol <=> df.getColumn("p"))
+        case Left(predCol) => df.filter(predCol)
       })
 
       val (maxLength, pathsFrame) =
@@ -143,7 +71,8 @@ object FuncProperty {
           .map(i => getNLengthPathTriples(df, pathsFrame, i))
           .toList
 
-      val betweenNAndMPaths = Foldable[List].fold(paths)
+      val betweenNAndMPaths = Foldable[List]
+        .fold(paths)
 
       toSPOG(betweenNAndMPaths)
         .asRight[Column]
@@ -162,7 +91,7 @@ object FuncProperty {
             )
             .asLeft
         case Left(predCol) =>
-          (predCol =!= df.getColumn("p")).asRight
+          not(predCol).asRight
       }
     }
 
@@ -178,7 +107,7 @@ object FuncProperty {
     }
   }
 
-  def uri(s: String): ColOrDf =
-    Left(lit(s))
+  def uri(df: DataFrame @@ Untyped, s: String): ColOrDf =
+    (df.getColumn("p") <=> lit(s)).asLeft
 
 }

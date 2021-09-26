@@ -9,12 +9,15 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions._
 
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
+
+import scala.util.Try
 
 /** A [[Multiset[A]]], as expressed in SparQL terms.
   *
@@ -107,20 +110,44 @@ final case class Multiset[A: Relational](
       val colsB     = bDF.columns.toSet
       val colsUnion = colsA.union(colsB)
 
-      def genColumns(current: Set[String], total: Set[String]): Seq[Column] = {
+      def getGraphVariableName(
+          df: A
+      ): Option[String] =
+        df.columns.toSeq.flatMap { col =>
+          Try(df.schema(col).metadata.getString("graph_column_name")).toOption
+        }.headOption
+
+      def genColumns(
+          current: Set[String],
+          total: Set[String]
+      ): Seq[Column] = {
         total.toList.sorted.map {
           case x if current.contains(x) => col(x)
-          case x                        => lit(null).as(x) // scalastyle:ignore
+          case x                        => nullLiteral.as(x)
         }
+      }
+
+      def fillGraphVarColumn(df: A, maybeGraphVarCol: Option[String]): A = {
+        maybeGraphVarCol
+          .map { graphVarCol =>
+            df.withColumn(graphVarCol, df.getColumn(GRAPH_VARIABLE.s))
+          }
+          .getOrElse(df)
       }
 
       val bindingsUnion = aBindings union bBindings
       val selectionA    = aDF.select(genColumns(colsA, colsUnion))
       val selectionB    = bDF.select(genColumns(colsB, colsUnion))
 
+      val aMaybeGraphVarCol = getGraphVariableName(selectionA)
+      val bMaybeGraphVarCol = getGraphVariableName(selectionB)
+
+      val aWithGraphVar = fillGraphVarColumn(selectionA, bMaybeGraphVarCol)
+      val bWithGraphVar = fillGraphVarColumn(selectionB, aMaybeGraphVarCol)
+
       Multiset(
         bindingsUnion,
-        selectionA.unionByName(selectionB)
+        aWithGraphVar.unionByName(bWithGraphVar)
       )
   }
 
