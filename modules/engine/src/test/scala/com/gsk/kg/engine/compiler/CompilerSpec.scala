@@ -133,8 +133,8 @@ class CompilerSpec
       outCapture.toString shouldEqual expectedOut
     }
 
-    /** TODO(pepegar): In order to make this test pass we need the
-      * results to be RDF compliant (mainly, wrapping values correctly)
+    /** TODO(pepegar): In order to make this test pass we need the results to be
+      * RDF compliant (mainly, wrapping values correctly)
       */
     "query a real DF with a real query" ignore {
       val query =

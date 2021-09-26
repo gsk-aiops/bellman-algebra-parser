@@ -15,8 +15,8 @@ trait CommonGenerators {
 
   val uriGen: Gen[URI] =
     for {
-      scheme   <- Gen.oneOf("http", "https", "ftp")
-      host     <- Gen.oneOf("gsk.com", "gsk-id", "dbpedia") //String host,
+      scheme <- Gen.oneOf("http", "https", "ftp")
+      host <- Gen.oneOf("gsk.com", "gsk-id", "dbpedia") //String host,
       port     <- Gen.option(Gen.choose(1025, 65535))
       path     <- path
       query    <- query
@@ -46,7 +46,7 @@ trait CommonGenerators {
         n,
         Gen.zip(nonEmptyStringGenerator, nonEmptyStringGenerator)
       )
-    } yield paths.map({ case (k, v) => s"$k=$v" }).mkString("&")
+    } yield paths.map { case (k, v) => s"$k=$v" }.mkString("&")
 
   val sparqlDataTypesGen: Gen[String] = Gen.oneOf(
     "xsd:string",

@@ -9,7 +9,7 @@ object PropertyExpression {
   final case class SeqExpression(
       pel: PropertyExpression,
       per: PropertyExpression
-  )                                                  extends PropertyExpression
+  ) extends PropertyExpression
   final case class OneOrMore(e: PropertyExpression)  extends PropertyExpression
   final case class ZeroOrMore(e: PropertyExpression) extends PropertyExpression
   final case class ZeroOrOne(e: PropertyExpression)  extends PropertyExpression

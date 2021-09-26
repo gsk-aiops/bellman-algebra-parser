@@ -10,8 +10,9 @@ trait Interpolators {
 
   implicit class SparqlQueryInterpolator(sc: StringContext) {
 
-    /** This method uses a default configuration, if a custom configuration wanted to be provided
-      * we recommend using the method [[QueryConstruct.parse()]] instead.
+    /** This method uses a default configuration, if a custom configuration
+      * wanted to be provided we recommend using the method
+      * [[QueryConstruct.parse()]] instead.
       * @param args
       * @return
       */

@@ -2,7 +2,8 @@ package com.gsk.kg.sparqlparser
 
 import com.gsk.kg.sparqlparser.StringVal.URIVAL
 
-/** @see Model after [[https://www.w3.org/TR/sparql11-query/#rExpression]]
+/** @see
+  *   Model after [[https://www.w3.org/TR/sparql11-query/#rExpression]]
   */
 sealed trait Expression
 
@@ -32,7 +33,7 @@ object Conditional {
       cnd: Expression,
       ifTrue: Expression,
       ifFalse: Expression
-  )                                               extends Conditional
+  ) extends Conditional
   final case class BOUND(e: Expression)           extends Conditional
   final case class COALESCE(xs: List[Expression]) extends Conditional
 }
@@ -45,7 +46,7 @@ object BuiltInFunc {
   final case class CONCAT(
       appendTo: Expression,
       append: List[Expression]
-  )                                        extends BuiltInFunc
+  ) extends BuiltInFunc
   final case class STR(s: Expression)      extends BuiltInFunc
   final case class LANG(s: Expression)     extends BuiltInFunc
   final case class DATATYPE(s: Expression) extends BuiltInFunc
@@ -65,7 +66,7 @@ object BuiltInFunc {
       s: Expression,
       pos: Expression,
       length: Option[Expression] = None
-  )                                              extends BuiltInFunc
+  ) extends BuiltInFunc
   final case class ISBLANK(s: Expression)        extends BuiltInFunc
   final case class ISNUMERIC(s: Expression)      extends BuiltInFunc
   final case class ENCODE_FOR_URI(s: Expression) extends BuiltInFunc
@@ -84,7 +85,7 @@ object BuiltInFunc {
       s: Expression,
       pattern: Expression,
       flags: Expression = StringVal.STRING("")
-  )                          extends BuiltInFunc
+  ) extends BuiltInFunc
   final case class UUID()    extends BuiltInFunc
   final case class STRUUID() extends BuiltInFunc
 }

@@ -152,9 +152,9 @@ object TypedLiterals {
 
   object DateLiteral {
 
-    /** This helper method tries to parse a datetime expressed as a RDF
-      * datetime string `"0193-07-03T20:50:09.000+04:00"^^xsd:dateTime`
-      * to a column with underlying type datetime.
+    /** This helper method tries to parse a datetime expressed as a RDF datetime
+      * string `"0193-07-03T20:50:09.000+04:00"^^xsd:dateTime` to a column with
+      * underlying type datetime.
       *
       * @param col
       * @return

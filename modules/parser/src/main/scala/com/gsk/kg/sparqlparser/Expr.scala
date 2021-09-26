@@ -115,7 +115,7 @@ object Expr {
       vars: Seq[VARIABLE],
       func: Seq[(VARIABLE, Expression)],
       r: Expr
-  )                                                           extends Expr
+  ) extends Expr
   final case class Order(conds: Seq[ConditionOrder], r: Expr) extends Expr
   final case class Distinct(r: Expr)                          extends Expr
   final case class Reduced(r: Expr)                           extends Expr

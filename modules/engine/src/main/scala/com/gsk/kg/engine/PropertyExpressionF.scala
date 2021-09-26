@@ -78,7 +78,7 @@ object PropertyExpressionF {
   final case class SeqExpressionF[A](
       pel: A,
       per: A
-  )                                             extends PropertyExpressionF[A]
+  ) extends PropertyExpressionF[A]
   @Lenses final case class OneOrMoreF[A](e: A)  extends PropertyExpressionF[A]
   @Lenses final case class ZeroOrMoreF[A](e: A) extends PropertyExpressionF[A]
   @Lenses final case class ZeroOrOneF[A](e: A)  extends PropertyExpressionF[A]

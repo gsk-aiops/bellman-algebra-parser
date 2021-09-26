@@ -48,7 +48,7 @@ object DAG {
       variable: VARIABLE,
       expression: Expression,
       r: A
-  )                                                  extends DAG[A]
+  ) extends DAG[A]
   @Lenses final case class Sequence[A](bps: List[A]) extends DAG[A]
   @Lenses final case class Path[A](
       s: StringVal,
@@ -56,7 +56,7 @@ object DAG {
       o: StringVal,
       g: List[StringVal],
       reverse: Boolean
-  )                                                              extends DAG[A]
+  ) extends DAG[A]
   @Lenses final case class BGP[A](quads: ChunkedList[Expr.Quad]) extends DAG[A]
   @Lenses final case class LeftJoin[A](l: A, r: A, filters: List[Expression])
       extends DAG[A]
@@ -115,8 +115,8 @@ object DAG {
         case DAG.Group(vars, func, r) => f(r).map(group(vars, func, _))
         case DAG.Order(conds, r)      => f(r).map(order(conds, _))
         case DAG.Table(vars, rows)    => table[B](vars, rows).pure[G]
-        case DAG.Exists(not, p, r)    => (f(p), f(r)).mapN(DAG.exists(not, _, _))
-        case DAG.Noop(str)            => noop[B](str).pure[G]
+        case DAG.Exists(not, p, r) => (f(p), f(r)).mapN(DAG.exists(not, _, _))
+        case DAG.Noop(str)         => noop[B](str).pure[G]
       }
   }
 
@@ -197,7 +197,7 @@ object DAG {
       l: T,
       r: T,
       filters: List[Expression]
-  ): T                                        = leftJoin[T](l, r, filters).embed
+  ): T = leftJoin[T](l, r, filters).embed
   def unionR[T: Embed[DAG, *]](l: T, r: T): T = union[T](l, r).embed
   def minusR[T: Embed[DAG, *]](l: T, r: T): T = minus[T](l, r).embed
   def filterR[T: Embed[DAG, *]](funcs: NonEmptyList[Expression], expr: T): T =
@@ -210,7 +210,7 @@ object DAG {
   def limitR[T: Embed[DAG, *]](
       l: Long,
       r: T
-  ): T                                     = limit[T](l, r).embed
+  ): T = limit[T](l, r).embed
   def distinctR[T: Embed[DAG, *]](r: T): T = distinct[T](r).embed
   def reducedR[T: Embed[DAG, *]](r: T): T  = reduced[T](r).embed
   def groupR[T: Embed[DAG, *]](
@@ -252,17 +252,17 @@ object DAG {
       case FilteredLeftJoinF(l, r, f)   => leftJoin(l, r, f.toList)
       case UnionF(l, r)                 => union(l, r)
       case MinusF(l, r)                 => minus(l, r)
-      case BGPF(quads)                  => bgp(ChunkedList.fromList(quads.toList))
-      case OpNilF()                     => noop("OpNilF not supported yet")
-      case GraphF(g, e)                 => scan(g.s, e)
-      case JoinF(l, r)                  => join(l, r)
-      case LeftJoinF(l, r)              => leftJoin(l, r, Nil)
-      case ProjectF(vars, r)            => project(vars.toList, r)
-      case PathF(s, p, o, g, reverse)   => path(s, p, o, g, reverse)
-      case QuadF(s, p, o, g)            => noop("QuadF not supported")
-      case DistinctF(r)                 => distinct(r)
-      case ReducedF(r)                  => reduced(r)
-      case GroupF(vars, func, r)        => group(vars.toList, func.toList, r)
+      case BGPF(quads)                => bgp(ChunkedList.fromList(quads.toList))
+      case OpNilF()                   => noop("OpNilF not supported yet")
+      case GraphF(g, e)               => scan(g.s, e)
+      case JoinF(l, r)                => join(l, r)
+      case LeftJoinF(l, r)            => leftJoin(l, r, Nil)
+      case ProjectF(vars, r)          => project(vars.toList, r)
+      case PathF(s, p, o, g, reverse) => path(s, p, o, g, reverse)
+      case QuadF(s, p, o, g)          => noop("QuadF not supported")
+      case DistinctF(r)               => distinct(r)
+      case ReducedF(r)                => reduced(r)
+      case GroupF(vars, func, r)      => group(vars.toList, func.toList, r)
       case OrderF(conds, r) =>
         order(NonEmptyList.fromListUnsafe(conds.toList), r)
       case OffsetLimitF(None, None, r)       => T.coalgebra(r)
